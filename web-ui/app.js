@@ -97,6 +97,6 @@ async function assetHead(path) {
 $("start-training").addEventListener("click", () => {
   // Standalone playable FPS prototype: synthetic geometry and targets only.
   // The real Burning Hall map will be enabled after authorized assets are integrated.
-  window.location.assign("/training/");
+  window.location.assign("/map3d/");
 });
 if (guest && guest.trim().length >= 2) showLobby(); else showLogin();
