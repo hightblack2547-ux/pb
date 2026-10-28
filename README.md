@@ -5,6 +5,28 @@ tools, tests, status reports and a custom Thai web launcher. It does **not**
 contain or distribute Point Blank game models, textures, maps, binaries or
 credentials.
 
+## Real Webport engine (V6)
+
+The deployment now includes the **actual upstream Webport game client**
+in `/game/`, not just our synthetic FPS demo.
+
+- `/launcher/`: Thai development lobby. Its main play button opens `/play/`.
+- `/play/`: checks for valid **authorized Point Blank Cross assets**
+  and lists missing map/weapon files. It refuses to call the prototype
+  scene a real Point Blank match.
+- `/game/?play&map=<map-id>&bots=4`: upstream's actual offline bot game
+  built from LeandroDettmer/point-blank-webport.
+- An **experimental** Safari touch controller is included; gameplay on
+  a real iPhone with full game assets is not yet verified.
+
+See [real client setup and limits](docs/REAL-WEBPORT-SETUP.md).
+
+**Not included:** any Point Blank game art, exported maps, characters,
+weapon models, sounds or an online game server. A real asset-complete game
+cannot be claimed until the authorized Cross export and Safari gameplay
+have actually been tested. Netlify static hosting cannot run the upstream
+Node/Postgres game server.
+
 ## What's working
 
 - Reads **Biah/PFN2** Point Blank Portable .i3Pack containers.
