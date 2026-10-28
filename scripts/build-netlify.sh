@@ -35,6 +35,8 @@ cp web-ui/map3d/src/main.js webport/map3d/src/
 
 # The launcher sends players to the actual upstream client, not our synthetic raycast demo.
 node --check web-ui/real-game/pb-touch.js
+node --check web-ui/real-game/import-private-assets.js
+node --check web-ui/real-game/private-assets-sw.js
 node --check scripts/patch-mobile-input.mjs
 node --check scripts/package-real-game.mjs
 node scripts/package-real-game.mjs webport/dist
@@ -43,6 +45,8 @@ test -s webport/dist/index.html
 test -s webport/dist/game/index.html
 test -s webport/dist/play/index.html
 test -s webport/dist/pb-touch.js
+test -s webport/dist/import-private-assets.js
+test -s webport/dist/pb-private-sw.js
 test -s webport/dist/launcher/index.html
 test -s webport/dist/launcher/app.js
 test -s webport/dist/training/index.html
