@@ -2,9 +2,18 @@
 // This is not an authenticated game account or a replacement for the match server.
 "use strict";
 const GUNS = Object.freeze([
-  {id:"ak47_pbic2013", name:"AK-47 PBIC2013", kind:"Assault Rifle", details:"โมเดล 3D ผ่านการแปลงพร้อมพื้นผิว · 3,178 สามเหลี่ยม", verified:true},
-  {id:"colt45", name:"Colt45", kind:"Pistol", details:"โมเดล 3D ผ่านการแปลงพร้อมพื้นผิว · 14,205 สามเหลี่ยม", verified:true},
-  {id:"m4a1", name:"M4A1", kind:"Assault Rifle", details:"โมเดล 3D ผ่านการแปลง · 4,497 สามเหลี่ยม · ขาดพื้นผิว 1 รายการ", verified:true},
+  {id:"ak_47_pbic2013", name:"AK-47 PBIC2013", kind:"Assault Rifle", details:"13 meshes · 3,178 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"colt45", name:"Colt45", kind:"Pistol", details:"3 meshes · 14,205 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"m4a1", name:"M4A1", kind:"Assault Rifle", details:"5 meshes · 4,497 สามเหลี่ยม · ขาดพื้นผิว 1 รายการ", missing:1},
+  {id:"aks74u", name:"AKS74U", kind:"SMG", details:"4 meshes · 4,982 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"spas_15_pbsc2013_nonlogo", name:"SPAS-15 PBSC2013", kind:"Shotgun", details:"3 meshes · 2,310 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"deserteagle_grs", name:"Desert Eagle GRS", kind:"Pistol", details:"3 meshes · 1,184 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"870mcs_sl", name:"870MCS SL", kind:"Shotgun", details:"6 meshes · 1,532 สามเหลี่ยม · ยังไม่มีพื้นผิวที่อ่านได้ 2 รายการ", missing:2},
+  {id:"karambit", name:"Karambit", kind:"Melee", details:"1 mesh · 1,758 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"mp7", name:"MP7", kind:"SMG", details:"6 meshes · 2,964 สามเหลี่ยม · ขาดพื้นผิว 1 รายการ", missing:1},
+  {id:"k_2", name:"K-2", kind:"Assault Rifle", details:"3 meshes · 1,831 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"ak_47_boar_zombie", name:"AK-47 Boar Zombie", kind:"Assault Rifle", details:"11 meshes · 17,600 สามเหลี่ยม · พื้นผิวครบ", missing:0},
+  {id:"aug_a3_esports", name:"AUG-A3 Esports", kind:"Assault Rifle", details:"4 meshes · 3,441 สามเหลี่ยม · พื้นผิวครบ", missing:0},
 ]);
 const $ = (id) => document.getElementById(id);
 const guestKey = "pb-webport-local-guest-v1";
@@ -51,7 +60,7 @@ function renderGuns() {
     subtitle.textContent = weapon.kind;
     label.append(title, subtitle);
     const badge = document.createElement("span");
-    badge.textContent = "3D VERIFIED";
+    badge.textContent = weapon.missing ? "3D / TEXTURE PENDING" : "3D VERIFIED";
     btn.append(label, badge);
     btn.addEventListener("click", () => { selected = weapon; renderGuns(); });
     $("weapons").append(btn);
