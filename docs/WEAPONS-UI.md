@@ -42,6 +42,22 @@ All 12 **model conversion jobs passed**, but conversion alone does not prove the
 
 The extraction test reads control positions and image references. Re-rendering the original screens in HTML/CSS/Canvas, matching atlas regions to controls, and touch adaptation **remain separate engineering tasks**.
 
+## Original UI texture conversion
+
+The read-only texture probe in [run 40712069586](https://github.com/hightblack2547-ux/pb/actions/runs/40712069586) decoded I3IB to PNG **in memory** (the PNG data was not uploaded).
+
+| Source | Converted PNG textures | Known issue |
+| --- | ---: | --- |
+| UI_Loading | 3 / 3 | Includes `Login.i3i` (1024 × 1024), `Loading.i3i` (1024 × 1024) |
+| UI_Interface | 10 / 10 tested | Further images exist in the pack |
+| UI_Ingame-Hud | 8 / 8 | HUD textures are 1024 × 512 |
+| UI_Main-SourceB | 4 / 4 | 512 × 512 atlases |
+| UI_Main_V1.1_ClanMark | 1 / 1 | 512 × 512 atlas |
+| UI_Main | 0 / 2 | Non-I3IB image container; still needs decoding |
+| UI_Main-SourceA | 0 / 3 | Non-I3IB image container; still needs decoding |
+
+This is a **decoder test**, not finished visual integration. Actual game menu art is intentionally absent from the public static ZIP.
+
 ## Working front-end scaffold (no copyrighted art)
 
 The `web-ui/` directory contains a custom Thai **development launcher** with guest nickname, lobby tabs, 12 verified weapon entries, and an offline-start gate that checks for required assets. It builds into `/launcher/` in the Netlify-ready static shell via the [web-build workflow](https://github.com/hightblack2547-ux/pb/actions/workflows/pb-web-build.yml).
