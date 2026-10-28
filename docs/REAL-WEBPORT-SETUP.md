@@ -36,6 +36,41 @@ export any assets.
 The static bundle works as a website, **not a ready-to-play original
 Point Blank game without original game files**.
 
+## Private iPhone ZIP import (V7)
+
+At `/play/` the **Private Assets ZIP** picker accepts a ZIP containing
+previously exported, authorized **Point Blank Cross** web assets in any of
+these layouts:
+
+```text
+assets/maps/index.json
+assets/maps/<map-id>/visual.glb
+assets/maps/<map-id>/collision.glb
+assets/maps/<map-id>/collision.json
+assets/weapons/models/index.json
+assets/cross/weapons/weapons.json
+assets/chars/...          # and the other Cross assets the engine requires
+```
+
+A ZIP created from the folder `public/assets/` is also accepted. The files
+are decompressed on the device using `DecompressionStream('deflate-raw')`,
+stored in Cache Storage under the user's Safari origin, and served to the
+real Webport client via a scoped service worker. **Nothing is uploaded to
+Netlify or GitHub**. The browser can evict this data at any time.
+
+This is a bounded experiment: ZIP entries must use Store/Deflate, not
+password protection or ZIP64, per-entry size is limited to 128 MB and
+total uncompressed import per ZIP to 900 MB. Safari storage may have a lower
+quota. Splitting an asset export into multiple ZIP parts is possible,
+but complete Cross exports can be ~5 GB and are unlikely to fit on iPhone.
+Partial assets will not make the game fully playable.
+
+An original `.RAR`, `.i3Pack` or the user's Portable client cannot be
+uploaded directly to this installer. It must first be exported in the
+**Cross Webport asset layout** using compatible and authorized files.
+This feature has passed syntax/build checks but **not** a full real-asset
+iPhone Safari gameplay test.
+
 ## Game assets
 
 The upstream client expects its own **Point Blank Cross** installation.
