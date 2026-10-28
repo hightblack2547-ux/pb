@@ -94,28 +94,9 @@ async function assetHead(path) {
     return response.ok && !type.includes("text/html");
   } catch { return false; }
 }
-$("start-training").addEventListener("click", async () => {
-  const button = $("start-training"), message = $("training-check");
-  button.disabled = true;
-  message.className = "check-results";
-  message.textContent = "ตรวจหาแผนที่ / Collision / คลังอาวุธในโฮสต์ที่ใช้งาน...";
-  const checks = await Promise.all([
-    assetHead("/assets/maps/burninghall/visual.glb"),
-    assetHead("/assets/maps/burninghall/collision.glb"),
-    assetHead("/assets/maps/burninghall/collision.json"),
-    assetHead("/assets/weapons/models/index.json"),
-  ]);
-  button.disabled = false;
-  if (!checks.every(Boolean)) {
-    const names = ["visual.glb", "collision.glb", "collision.json", "weapons/models/index.json"];
-    message.className = "check-results error";
-    message.textContent = "ยังเปิดโหมดฝึกไม่ได้: ไฟล์เกมบนเว็บยังไม่ครบ\nขาดหรือเข้าถึงไม่ได้: " +
-      names.filter((_,i)=>!checks[i]).join(", ") +
-      "\nระบบแปลงบน GitHub ใช้ไฟล์ชั่วคราว และยังไม่ได้เผยแพร่ Assets บน Netlify";
-    return;
-  }
-  message.className = "check-results good";
-  message.textContent = "พบ Assets หลักครบเบื้องต้น กำลังเปิด Webport โหมดฝึก... (ยังต้องตรวจทรัพยากรอื่นเมื่อเข้าเกม)";
-  window.location.assign("/?play&map=burninghall");
+$("start-training").addEventListener("click", () => {
+  // Standalone playable FPS prototype: synthetic geometry and targets only.
+  // The real Burning Hall map will be enabled after authorized assets are integrated.
+  window.location.assign("/training/");
 });
 if (guest && guest.trim().length >= 2) showLobby(); else showLogin();
