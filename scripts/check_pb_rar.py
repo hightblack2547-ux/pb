@@ -79,17 +79,29 @@ def main():
                     selected.append(related)
             break
     preferred = ("Weapon_AK-47_PBIC2013", "Weapon_AK-47", "Weapon_Colt45",
-                 "Weapon_AUG_A3", "Weapon_M4A1", "Weapon_Aks74u")
+                 "Weapon_AUG_A3", "Weapon_M4A1", "Weapon_Aks74u",
+                 "Weapon_SPAS_15_PBSC2013_NonLogo", "Weapon_DesertEagle_GRS",
+                 "Weapon_870MCS_SL", "Weapon_Karambit", "Weapon_AWP",
+                 "Weapon_MP7", "Weapon_K-2", "Weapon_P90", "Weapon_Famas")
+    # Inventory only, not exported or published as a manifest of owned assets.
+    weapon_all = sorted((pathlib.PurePosixPath(n).name, size) for n, size in packs
+                        if pathlib.PurePosixPath(n).name.lower().startswith("weapon_"))
+    result["steps"]["weapon_inventory"] = {
+        "count": len(weapon_all),
+        "sample": [{"name": n, "bytes": size} for n, size in weapon_all[:45]],
+    }
     weapon_names = []
     options = [by_file[(n + ".i3pack").lower()] for n in preferred
                if (n + ".i3pack").lower() in by_file]
-    if not options:
-        options = sorted([t for k, t in by_file.items()
-                          if k.startswith("weapon_") and
-                          300000 < t[1] < 12000000 and k.endswith(".i3pack")],
-                         key=lambda t: t[1], reverse=True)[:8]
+    fallback_models = sorted([t for k, t in by_file.items()
+                              if k.startswith("weapon_") and
+                              300000 < t[1] < 12000000 and k.endswith(".i3pack")],
+                             key=lambda t: t[1], reverse=True)[:25]
+    seen_weapons = {n.lower() for n, _ in options}
+    options += [t for t in fallback_models if
+                pathlib.PurePosixPath(t[0]).name.lower() not in seen_weapons][:18]
     for candidate_name, candidate_size in options:
-        if len(weapon_names) >= 3:
+        if len(weapon_names) >= 12:
             break
         base = pathlib.PurePosixPath(candidate_name).name
         if 100000 < candidate_size < 30000000 and base not in weapon_names:
@@ -127,6 +139,39 @@ def main():
                 re.fullmatch(r"[A-Za-z0-9_.-]+", base)):
             selected.append((archive_name, archive_bytes))
             character_names.append(base[6:-7])
+    ui_entries = sorted((n, size) for n, size in packs
+                        if pathlib.PurePosixPath(n).name.lower().startswith(
+                            ("ui_", "ui-", "gui_")))
+    result["steps"]["ui_inventory"] = {
+        "pack_count": len(ui_entries),
+        "examples": [{"file": pathlib.PurePosixPath(n).name, "bytes": size}
+                     for n, size in ui_entries[:70]],
+        "loose_scene_count": sum(1 for n, _ in entries
+                                 if n.lower().endswith((".i3uis", ".i3uil", ".lua"))),
+        "loose_scenes_sample": [pathlib.PurePosixPath(n).name
+                                for n, _ in entries if
+                                n.lower().endswith((".i3uis", ".i3uil"))][:35],
+    }
+    # Prioritize login/main/lobby and V11 GUI packs; real names come
+    # from the RAR, not inferred from platform-specific assumptions.
+    ui_pick = []
+    for term in ("ui_project_main", "ui_project_login", "ui_project_lobby",
+                 "ui_project_popup", "ui_v11", "ui_re2"):
+        found = next(((n, sz) for n, sz in ui_entries if
+                      pathlib.PurePosixPath(n).stem.lower() == term
+                      and 200 < sz < 35000000), None)
+        if found and found not in ui_pick:
+            ui_pick.append(found)
+    for n, sz in ui_entries:
+        if len(ui_pick) >= 6:
+            break
+        if ((n, sz) not in ui_pick and 200 < sz < 15000000
+                and any(x in pathlib.PurePosixPath(n).stem.lower()
+                        for x in ("project", "login", "lobby", "menu", "main"))):
+            ui_pick.append((n, sz))
+    ui_pick = ui_pick[:6]
+    selected.extend(ui_pick)
+    ui_names = [pathlib.PurePosixPath(n).stem for n, _ in ui_pick]
     pack_dir = ROOT / "selected_packs"
     pack_dir.mkdir(exist_ok=True)
     records = []
@@ -157,9 +202,10 @@ def main():
     weapon_names = [name for name in weapon_names if (name + ".i3Pack").lower() in available]
     character_names = [name for name in character_names if
                        ("Chara_" + name + ".i3Pack").lower() in available]
+    ui_names = [n for n in ui_names if (n + ".i3Pack").lower() in available]
     result["steps"]["probe_packs"] = {
         "map": map_name, "weapons": weapon_names,
-        "characters": character_names, "packs": records
+        "characters": character_names, "ui": ui_names, "packs": records
     }
     # Character animations are separate i3AnimPack files, usually nested
     # below Chara/<name>. Preserve only aggregate file names in public JSON.
@@ -274,6 +320,20 @@ def main():
         result["steps"]["glb_probe"] = {"exit_code": rc, "status": probe_status,
                                          "data": probe,
                                          "log_tail": log[-1200:] if not probe else ""}
+        save()
+    # Probe classic GUI controls and packed UI resources; no images saved to GitHub.
+    if ui_names:
+        rc, log = cmd("node", str(pathlib.Path("scripts/probe_ui.mjs").resolve()),
+                      str(tool.resolve()), str(pack_dir.resolve()),
+                      ",".join(n + ".i3Pack" for n in ui_names), timeout=300)
+        marker = "PB_UI_JSON="
+        try:
+            ui = json.loads(log.rsplit(marker, 1)[1].splitlines()[0]) if marker in log else {}
+        except (ValueError, IndexError):
+            ui = {}
+        result["steps"]["ui_probe"] = {
+            "exit_code": rc, "data": ui, "log_tail": "" if ui else log[-1400:]
+        }
         save()
     if map_name and (pack_dir / (map_name + "_Col.i3Pack")).exists():
         out_root = (ROOT / "glb_probe" / "maps").resolve()
