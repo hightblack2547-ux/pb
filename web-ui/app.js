@@ -95,8 +95,8 @@ async function assetHead(path) {
   } catch { return false; }
 }
 $("start-training").addEventListener("click", () => {
-  // Standalone playable FPS prototype: synthetic geometry and targets only.
-  // The real Burning Hall map will be enabled after authorized assets are integrated.
-  window.location.assign("/map3d/");
+  // Real upstream Three.js/Rapier game client is at /game/.
+  // /play/ checks authorized PBCross map and weapon exports before launching it.
+  window.location.assign("/play/");
 });
 if (guest && guest.trim().length >= 2) showLobby(); else showLogin();
