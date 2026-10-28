@@ -1,0 +1,15 @@
+# Automatic static build for the GitHub-linked Netlify site.
+# The build runs in the Netlify environment, not in the user's iPhone.
+[build]
+  command = "bash scripts/build-netlify.sh"
+  publish = "webport/dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# Start at the Thai launcher, not the upstream client's asset-dependent entry page.
+[[redirects]]
+  from = "/"
+  to = "/launcher/"
+  status = 302
+  force = true
