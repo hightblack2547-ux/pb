@@ -81,8 +81,18 @@ def main():
     magic_check = "magic !== 'I3R2' && magic !== 'AVIX'"
     if upstream.count(magic_check) != 1:
         raise RuntimeError("Unpacker guard changed upstream; refusing an unsafe patch")
+    # Portable PFN2 tables can contain valid extended Latin-1 filenames.
+    # Keep strict path safety: no slash, backslash, control characters,
+    # '.' or '..', and do not relax the check for other client formats.
+    filename_guard = r"&& /^[\x20-\x7e]+$/.test(f.name));"
+    if upstream.count(filename_guard) != 1:
+        raise RuntimeError("Unpacker filename check changed upstream")
+    safe_biah_guard = r"""&& (d.toString('latin1', 0, 4) === 'Biah'
+      ? (f.name.length > 0 && !/[\\/\x00-\x1f]/.test(f.name) && f.name !== '.' && f.name !== '..')
+      : /^[\x20-\x7e]+$/.test(f.name)));"""
     unpack_js.write_text(
-        upstream.replace(magic_check, magic_check + " && magic !== 'Biah'"),
+        upstream.replace(magic_check, magic_check + " && magic !== 'Biah'")
+        .replace(filename_guard, safe_biah_guard),
         encoding="utf-8"
     )
     rc, log = cmd("npm", "install", "--no-audit", "--no-fund", cwd=tool, timeout=600)
