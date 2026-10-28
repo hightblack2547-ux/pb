@@ -60,6 +60,62 @@ def main():
         raise RuntimeError("Sample extract failed")
     result["steps"]["sample"] = {"bytes": expected, "sha256": hashlib.sha256(sample.read_bytes()).hexdigest()}
     save()
+    # Probe one map and up to three model packs, but keep raw assets on the
+    # ephemeral runner only. GitHub receives JSON diagnostics, never game data.
+    by_file = {pathlib.PurePosixPath(k).name.lower(): (k, n) for k, n in packs}
+    selected = []
+    map_name = ""
+    for candidate in ("BurningHall", "Airport", "Metro", "NStation"):
+        key = (candidate + ".i3pack").lower()
+        if key in by_file:
+            map_name = candidate
+            selected.append(by_file[key])
+            tex = by_file.get((candidate + "_Textures.i3Pack").lower())
+            if tex:
+                selected.append(tex)
+            break
+    preferred = ("Weapon_AK-47_PBIC2013", "Weapon_AK-47", "Weapon_Colt45",
+                 "Weapon_AUG_A3", "Weapon_M4A1", "Weapon_Aks74u")
+    weapon_names = []
+    options = [by_file[(n + ".i3pack").lower()] for n in preferred
+               if (n + ".i3pack").lower() in by_file]
+    if not options:
+        options = sorted([t for k, t in by_file.items()
+                          if k.startswith("weapon_") and
+                          300000 < t[1] < 12000000 and k.endswith(".i3pack")],
+                         key=lambda t: t[1], reverse=True)[:8]
+    for candidate_name, candidate_size in options:
+        if len(weapon_names) >= 3:
+            break
+        base = pathlib.PurePosixPath(candidate_name).name
+        if 100000 < candidate_size < 30000000 and base not in weapon_names:
+            selected.append((candidate_name, candidate_size))
+            weapon_names.append(base[:-7])
+    pack_dir = ROOT / "selected_packs"
+    pack_dir.mkdir(exist_ok=True)
+    records = []
+    for archive_name, pack_size in selected:
+        base = pathlib.PurePosixPath(archive_name).name
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", base):
+            records.append({"pack": base, "status": "rejected_unsafe_name"})
+            continue
+        if pack_size > 45000000:
+            records.append({"pack": base, "status": "skipped_size", "bytes": pack_size})
+            continue
+        target = pack_dir / base
+        with target.open("wb") as f:
+            process = subprocess.run(["7z", "e", "-so", str(RAR), archive_name],
+                                     stdout=f, stderr=subprocess.PIPE, timeout=300)
+        ok = process.returncode == 0 and target.stat().st_size == pack_size
+        if not ok:
+            target.unlink(missing_ok=True)
+        records.append({"pack": base, "bytes": pack_size, "status": "extracted" if ok else "failed"})
+    available = {x["pack"].lower() for x in records if x["status"] == "extracted"}
+    if (map_name + ".i3Pack").lower() not in available:
+        map_name = ""
+    weapon_names = [name for name in weapon_names if (name + ".i3Pack").lower() in available]
+    result["steps"]["probe_packs"] = {"map": map_name, "weapons": weapon_names, "packs": records}
+    save()
     RAR.unlink()
     # Validate this client format separately from the upstream unpacker. This
     # reports metadata only; neither the original archive nor extracted assets
@@ -114,6 +170,19 @@ def main():
     save()
     if rc != 0 or not manifest_count:
         raise RuntimeError("pbx unpack needs further Biah compatibility work; see pbx_unpack in JSON")
+    if map_name or weapon_names:
+        probe_script = pathlib.Path("scripts/probe_glb.mjs").resolve()
+        rc, log = cmd("node", str(probe_script), str(tool.resolve()), str(pack_dir.resolve()),
+                      str((ROOT / "glb_probe").resolve()), map_name, ",".join(weapon_names),
+                      timeout=420)
+        marker = "PB_PROBE_JSON="
+        try:
+            probe = json.loads(log.rsplit(marker, 1)[1].splitlines()[0]) if marker in log else {}
+        except (ValueError, IndexError):
+            probe = {}
+        result["steps"]["glb_probe"] = {"exit_code": rc, "data": probe,
+                                         "log_tail": log[-1200:] if not probe else ""}
+        save()
 
 if __name__ == "__main__":
     try:
