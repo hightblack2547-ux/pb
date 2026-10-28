@@ -9,6 +9,7 @@ on:
       - scripts/patch-mobile-input.mjs
       - scripts/package-real-game.mjs
       - scripts/export-title-catalog.mjs
+      - scripts/patch-offline-loadout.mjs
       - web-ui/**
   workflow_dispatch:
 permissions:
