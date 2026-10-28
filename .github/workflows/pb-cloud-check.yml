@@ -7,6 +7,7 @@ on:
       - .github/workflows/pb-cloud-check.yml
       - scripts/check_pb_rar.py
       - scripts/probe_glb.mjs
+      - scripts/probe_ui.mjs
       - scripts/biah_metadata.py
   workflow_dispatch:
     inputs:
