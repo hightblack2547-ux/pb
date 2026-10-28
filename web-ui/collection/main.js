@@ -112,8 +112,22 @@ function renderMapDetail(){
  const m=state.selectedMap;$("map-name").textContent=m?.name||"เลือกแผนที่";
  $("map-detail").textContent=m?"Map ID: "+m.id+" · Visual: "+Boolean(m.check?.visual)+" · Collision: "+Boolean(m.check?.collisionGlb)+" · จุดเกิด: "+(m.respawns??"ไม่ทราบ"):"ยังไม่มีดัชนีแผนที่";
  $("play-map").disabled=!(m?.check?.visual&&m?.check?.collisionGlb);
+ $("preview-map").disabled=!m?.check?.visual;
 }
-$("play-map").addEventListener("click",()=>{const m=state.selectedMap;if(!m||!/^[a-z\d_-]+$/i.test(m.id))return;location.href="/game/?play&map="+encodeURIComponent(m.id)+"&bots=4"});
+$("preview-map").addEventListener("click",()=>{
+ const m=state.selectedMap;
+ if(!m||!/^[a-z\d_-]+$/i.test(m.id))return;
+ void showGLB("map-preview","/assets/maps/"+m.id+"/visual.glb");
+});
+$("play-map").addEventListener("click",()=>{
+ const m=state.selectedMap;if(!m||!/^[a-z\d_-]+$/i.test(m.id))return;
+ const params=new URLSearchParams({map:m.id,bots:"4"});
+ params.set("play","");
+ const c=read("character",null);
+ if(c&&typeof c.name==="string"&&/^[a-z\d_-]+$/i.test(c.name))
+   params.set(c.team==="blue"?"charBlue":"charRed",c.name);
+ location.href="/game/?"+params.toString();
+});
 function renderRank(){
  $("rank").value=String(Math.max(1,Number(profile.rank)||1));$("nickname").value=profile.nickname||"SOLDIER";
  const k="STBL_IDX_RANK_"+profile.rank,real=state.strings[k];
