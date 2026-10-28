@@ -32,8 +32,10 @@ jobs:
         shell: bash
         run: |
           node --check web-ui/app.js
-          mkdir -p webport/dist/launcher
+          node --check web-ui/training/training.js
+          mkdir -p webport/dist/launcher webport/dist/training
           cp web-ui/index.html web-ui/style.css web-ui/app.js webport/dist/launcher/
+          cp web-ui/training/index.html web-ui/training/training.js web-ui/training/training.css webport/dist/training/
       - name: Verify static bundle and write result
         shell: bash
         run: |
@@ -41,6 +43,8 @@ jobs:
           test -f webport/dist/launcher/index.html
           test -f webport/dist/launcher/style.css
           test -f webport/dist/launcher/app.js
+          test -f webport/dist/training/training.js
+          test -f webport/dist/training/index.html
           test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
           echo '## Browser client build' >> "$GITHUB_STEP_SUMMARY"
           echo 'Vite/TypeScript production bundle: built (not deployed).' >> "$GITHUB_STEP_SUMMARY"
