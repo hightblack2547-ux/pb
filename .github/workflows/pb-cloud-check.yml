@@ -6,6 +6,8 @@ on:
     paths:
       - .github/workflows/pb-cloud-check.yml
       - scripts/check_pb_rar.py
+      - scripts/probe_glb.mjs
+      - scripts/biah_metadata.py
   workflow_dispatch:
     inputs:
       drive_file_id:
