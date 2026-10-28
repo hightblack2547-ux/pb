@@ -3,7 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
-const [toolRoot, packRoot, outRoot, mapName = "", weaponsCsv = "", charactersCsv = ""] = process.argv.slice(2);
+const [toolRoot, packRoot, outRoot, mapName = "", weaponsCsv = "", charactersCsv = "", animationsRoot = ""] = process.argv.slice(2);
 if (!toolRoot || !packRoot || !outRoot) {
   console.error("usage: probe_glb.mjs TOOL_ROOT PACK_DIR OUT_DIR [MAP] [WEAPONS_CSV]");
   process.exit(2);
@@ -76,6 +76,27 @@ try {
     } catch (error) {
       record.ok = false;
       record.error = String(error?.message || error).slice(0, 800);
+    }
+    if (record.ok && animationsRoot) {
+      const animDir = path.join(absolute(animationsRoot), name);
+      if (fs.existsSync(animDir) && fs.readdirSync(animDir).some((f) => /\\.i3AnimPack$/i.test(f))) {
+        record.animation_probe = { attempted: true };
+        try {
+          const animated = exportChara(
+            { name, team: "unknown", id, packDir: absolute(packRoot), animDir },
+            { outRoot: path.join(absolute(outRoot), "animated"), maxTex: 512, log: () => {} }
+          );
+          record.animation_probe.clips_3pv = animated.clips?.length ?? 0;
+          record.animation_probe.clips_1pv = animated.arms1pv?.clips?.length ?? 0;
+          record.animation_probe.glb = fileInfo(path.join(absolute(outRoot), "animated", "chars", id, "model.glb"));
+          record.animation_probe.ok = (record.animation_probe.clips_3pv + record.animation_probe.clips_1pv) > 0 &&
+            record.animation_probe.glb.exists;
+          record.animations_tested = true;
+        } catch (error) {
+          record.animation_probe.ok = false;
+          record.animation_probe.error = String(error?.message || error).slice(0, 800);
+        }
+      }
     }
     info.characters.push(record);
   }
