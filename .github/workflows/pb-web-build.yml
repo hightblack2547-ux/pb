@@ -1,0 +1,37 @@
+name: Check static Safari / Netlify build
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/pb-web-build.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Clone public browser-client source only
+        run: git clone --depth 1 https://github.com/LeandroDettmer/point-blank-webport.git webport
+      - name: Install browser build dependencies without native postinstall scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: webport
+      - name: Build browser client without proprietary assets
+        run: npm run build:prod
+        working-directory: webport
+      - name: Verify static bundle and write result
+        shell: bash
+        run: |
+          test -f webport/dist/index.html
+          test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
+          echo '## Browser client build' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Vite/TypeScript production bundle: built (not deployed).' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No Point Blank assets or private data are bundled in this test.' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          du -sh webport/dist | tee -a "$GITHUB_STEP_SUMMARY"
