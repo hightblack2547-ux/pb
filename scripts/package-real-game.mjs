@@ -15,5 +15,7 @@ fs.mkdirSync(path.join(dist,"game"),{recursive:true});
 fs.mkdirSync(path.join(dist,"play"),{recursive:true});
 fs.writeFileSync(path.join(dist,"game/index.html"),html);
 fs.copyFileSync("web-ui/real-game/pb-touch.js",path.join(dist,"pb-touch.js"));
+fs.copyFileSync("web-ui/real-game/import-private-assets.js",path.join(dist,"import-private-assets.js"));
+fs.copyFileSync("web-ui/real-game/private-assets-sw.js",path.join(dist,"pb-private-sw.js"));
 fs.copyFileSync("web-ui/real-game/index.html",path.join(dist,"play/index.html"));
-console.log("Packaged actual Webport game at /game/ and licensed-asset gate at /play/");
+console.log("Packaged Webport at /game/, private ZIP installer at /play/, and on-device asset service worker");
