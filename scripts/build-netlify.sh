@@ -41,7 +41,20 @@ node --check scripts/patch-mobile-input.mjs
 node --check scripts/package-real-game.mjs
 node scripts/package-real-game.mjs webport/dist
 
+# Build the user's requested non-fake armory / character / map / rank / title UI.
+# Asset lists load only from authorized /assets/ manifests (including private Safari cache).
+mkdir -p webport/collection
+cp web-ui/collection/index.html web-ui/collection/main.js webport/collection/
+(
+  cd webport
+  npx --no-install vite build collection --base /collection/ --outDir ../dist/collection --emptyOutDir
+)
+node scripts/export-title-catalog.mjs webport/src/lobby/core/titleData.ts webport/dist/collection/title-catalog.json
+
 test -s webport/dist/index.html
+test -s webport/dist/collection/index.html
+test -s webport/dist/collection/title-catalog.json
+test -n "$(find webport/dist/collection -type f -name '*.js' -print -quit)"
 test -s webport/dist/game/index.html
 test -s webport/dist/play/index.html
 test -s webport/dist/pb-touch.js
