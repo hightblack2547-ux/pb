@@ -9,10 +9,11 @@ if (!toolRoot || !packDir) { console.error("usage: node probe_ui.mjs TOOL_ROOT P
 const files=(csv||"").split(",").filter(Boolean);
 const result=[];
 const trunc=(x,n=80)=>String(x||"").slice(0,n);
-let parsePack,readGuiSets;
+let parsePack,decodeContent,readGuiSets,parseScene;
 try{
-  ({parsePack}=await import(pathToFileURL(path.resolve(toolRoot,"i3pack/unpack.mjs")).href));
+  ({parsePack,decodeContent}=await import(pathToFileURL(path.resolve(toolRoot,"i3pack/unpack.mjs")).href));
   ({readGuiSets}=await import(pathToFileURL(path.resolve(toolRoot,"i3gui/i3gui.mjs")).href));
+  ({parseScene}=await import(pathToFileURL(path.resolve(toolRoot,"ui-export/lib.mjs")).href));
 }catch(error){
   console.log("PB_UI_JSON="+JSON.stringify({error:trunc(error?.message,400),packs:[]}));
   process.exit(0);
@@ -23,7 +24,7 @@ function flatten(n,acc){
   for(const c of (n.children||[]))flatten(c,acc);
 }
 for(const name of files){
-  const rec={pack:trunc(name),bytes:0,nodes:0,files:0,ui_scenes:0,controls:0,ui_names:[],extensions:{},texture_refs:0};
+  const rec={pack:trunc(name),bytes:0,nodes:0,files:0,ui_scenes:0,controls:0,ui_names:[],extensions:{},texture_refs:0,ui_layouts:0,ui_layout_errors:0,layout_samples:[]};
   try{
     const f=path.resolve(packDir,name);
     if(!f.startsWith(path.resolve(packDir)+path.sep))throw Error("unsafe UI pack path");
@@ -42,6 +43,32 @@ for(const name of files){
         }
       }
       rec.ui_names=names;
+      const found=[];
+      for(const node of tree.nodes){
+        for(const e of node.files){
+          if(!/\.i3UIs$/i.test(e.name))continue;
+          if(!Number.isSafeInteger(e.offset)||!Number.isSafeInteger(e.size)||
+              e.offset<0||e.size<100||e.offset+e.size>buf.length) {
+            rec.ui_layout_errors++; continue;
+          }
+          try {
+            let data=buf.subarray(e.offset,e.offset+e.size);
+            if(e.attr && (e.attr & 0x08000000)) data=decodeContent(data,e.attr);
+            if(!data)throw Error("cannot decode UI data");
+            const scene=parseScene(data);
+            rec.ui_layouts++;
+            const relevant=/(login|main|lobby|ready|room|shop|inven|weapon|hud|loading|result|select|menu)/i.test(e.name);
+            if(relevant && found.length<70)found.push({
+              file:trunc(e.name,105), scene:trunc(scene.name,70), design:scene.design,
+              controls:scene.controls.length, script:trunc(scene.script,90),
+              first_controls:scene.controls.slice(0,5).map(c=>({
+                name:trunc(c.name),type:trunc(c.cls),x:c.x,y:c.y,w:c.w,h:c.h
+              }))
+            });
+          }catch(err){ rec.ui_layout_errors++; if(!rec.first_layout_error)rec.first_layout_error=trunc(err.message,240); }
+        }
+      }
+      rec.layout_samples=found.slice(0,36);
     }catch(e){rec.parse_error=trunc(e.message,300);}
     try{
       const sets=readGuiSets(buf);
