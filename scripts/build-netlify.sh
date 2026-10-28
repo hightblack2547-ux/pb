@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Netlify and GitHub Actions use exactly the same source build steps.
+# This generates an unofficial static FPS prototype WITHOUT game-owned assets.
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+echo "Building PB Webport static prototype with Node $(node --version)"
+
+# In Netlify's clean checkout there is no vendored webport. Only public
+# source code is cloned. Licensed game assets must never be auto-published.
+if [ ! -f webport/package.json ]; then
+  git clone --depth 1 https://github.com/LeandroDettmer/point-blank-webport.git webport
+fi
+
+npm ci --ignore-scripts --no-audit --no-fund --prefix webport
+npm ci --ignore-scripts --no-audit --no-fund --prefix webport/server
+npm run build:prod --prefix webport
+
+node --check web-ui/app.js
+node --check web-ui/training/training.js
+mkdir -p webport/dist/launcher webport/dist/training webport/map3d/src
+cp web-ui/index.html web-ui/style.css web-ui/app.js webport/dist/launcher/
+cp web-ui/training/index.html web-ui/training/training.js web-ui/training/training.css webport/dist/training/
+cp web-ui/map3d/index.html webport/map3d/
+cp web-ui/map3d/src/main.js webport/map3d/src/
+
+# Root argument is positional. --root is NOT supported by this Vite CLI.
+(
+  cd webport
+  npx --no-install vite build map3d --base /map3d/ --outDir ../dist/map3d --emptyOutDir
+)
+
+test -s webport/dist/index.html
+test -s webport/dist/launcher/index.html
+test -s webport/dist/launcher/app.js
+test -s webport/dist/training/index.html
+test -s webport/dist/training/training.js
+test -s webport/dist/map3d/index.html
+test -n "$(find webport/dist/map3d -type f -name '*.js' -print -quit)"
+test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
+
+echo 'Build succeeded; publish directory: webport/dist'
+echo 'Game maps, weapon models and character models are NOT included.'
