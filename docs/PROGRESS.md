@@ -1,6 +1,6 @@
 # PB Portable Webport — Verified conversion progress
 
-Last verified: 2026-10-28 (UTC)
+Last verified: 2026-10-28 13:12 UTC
 
 ## Test run
 GitHub Actions [run 40662491631](https://github.com/hightblack2547-ux/pb/actions/runs/40662491631) completed successfully. Diagnostics are in the short-lived `pb-diagnostics-json` artifact; no source archive or extracted copyrighted game assets were uploaded.
@@ -18,10 +18,17 @@ GitHub Actions [run 40662491631](https://github.com/hightblack2547-ux/pb/actions
 | AK-47 PBIC2013 | yes | 3,178 | 288,736 | textures complete |
 | Colt45 | yes | 14,205 | 1,453,472 | textures complete |
 | M4A1 | yes | 4,497 | 419,724 | 1 texture reference missing |
+| REBEL Male body | yes | 6,630 | 455,104 | 63 bones; 3 textures; 4 missing texture references |
+| REBEL Male arms (first person) | yes | n/a | 193,232 | Rig exists, animations not yet validated |
+| SWAT Male body | no | n/a | n/a | Exporter reports `no body LOD`; compatibility work required |
+
+### Browser build test
+
+GitHub Actions [run 40694279963](https://github.com/hightblack2547-ux/pb/actions/runs/40694279963) successfully built the upstream `point-blank-webport` production client using Node 24 and dependencies for both the root and server TypeScript projects. Resulting static `dist/` directory was 4.4 MB without proprietary assets. This verifies only the code build; Safari runtime and controls have not been tested.
 
 ### Not yet complete
 - Fix 17 missing map textures, one M4A1 texture reference
-- Export character models and animation
+- Identify/fix SWAT Male body LOD compatibility; validate character animation packs (REBEL Male body and first-person arms already exported without clips)
 - Integrate compatible map/weapon/collision assets with the webport runtime
 - Test mobile input, Safari, FPS, and Netlify build
 - Verify the user's legal right to redistribute assets before any public hosting
