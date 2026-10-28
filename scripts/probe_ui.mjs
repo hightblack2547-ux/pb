@@ -1,6 +1,7 @@
 // Diagnostic-only reader for UI containers. Never exports or publishes visual assets.
 // Runs in an ephemeral GitHub Actions worker.
 import fs from "node:fs";
+import {createHash} from "node:crypto";
 import path from "node:path";
 import {pathToFileURL} from "node:url";
 
@@ -9,11 +10,12 @@ if (!toolRoot || !packDir) { console.error("usage: node probe_ui.mjs TOOL_ROOT P
 const files=(csv||"").split(",").filter(Boolean);
 const result=[];
 const trunc=(x,n=80)=>String(x||"").slice(0,n);
-let parsePack,decodeContent,readGuiSets,parseScene;
+let parsePack,decodeContent,readGuiSets,parseScene,readI3IB,decodeI3IB,encodePNG;
 try{
   ({parsePack,decodeContent}=await import(pathToFileURL(path.resolve(toolRoot,"i3pack/unpack.mjs")).href));
   ({readGuiSets}=await import(pathToFileURL(path.resolve(toolRoot,"i3gui/i3gui.mjs")).href));
   ({parseScene}=await import(pathToFileURL(path.resolve(toolRoot,"ui-export/lib.mjs")).href));
+  ({readI3IB,decodeI3IB,encodePNG}=await import(pathToFileURL(path.resolve(toolRoot,"i3r2/skin-glb.mjs")).href));
 }catch(error){
   console.log("PB_UI_JSON="+JSON.stringify({error:trunc(error?.message,400),packs:[]}));
   process.exit(0);
@@ -24,7 +26,7 @@ function flatten(n,acc){
   for(const c of (n.children||[]))flatten(c,acc);
 }
 for(const name of files){
-  const rec={pack:trunc(name),bytes:0,nodes:0,files:0,ui_scenes:0,controls:0,ui_names:[],extensions:{},texture_refs:0,ui_layouts:0,ui_layout_errors:0,layout_samples:[]};
+  const rec={pack:trunc(name),bytes:0,nodes:0,files:0,ui_scenes:0,controls:0,ui_names:[],extensions:{},texture_refs:0,ui_layouts:0,ui_layout_errors:0,layout_samples:[],ui_textures_ok:0,ui_textures_failed:0,ui_texture_samples:[]};
   try{
     const f=path.resolve(packDir,name);
     if(!f.startsWith(path.resolve(packDir)+path.sep))throw Error("unsafe UI pack path");
@@ -69,6 +71,35 @@ for(const name of files){
         }
       }
       rec.layout_samples=found.slice(0,36);
+      for(const node of tree.nodes) {
+        for(const e of node.files) {
+          if(!/\.i3i$/i.test(e.name) || rec.ui_textures_ok+rec.ui_textures_failed>=10)continue;
+          if(e.offset<0||e.size<64||e.offset+e.size>buf.length)continue;
+          try{
+            let data=buf.subarray(e.offset,e.offset+e.size);
+            if(e.attr&&(e.attr&0x08000000)) data=decodeContent(data,e.attr);
+            if(!data)throw Error("texture decryption unsupported");
+            let at=0;
+            if(data.toString("latin1",0,4)!=="I3IB"){
+              at=data.indexOf("I3IB");
+              if(at<0 || at>512)throw Error("no I3IB header");
+            }
+            const tex=readI3IB(data,at,data.length);
+            if(!tex||tex.kind==="unsupported"||tex.w*tex.h>4000000)throw Error("unsupported image");
+            const rgba=decodeI3IB(data,tex);
+            const png=encodePNG(rgba,tex.w,tex.h,true);
+            rec.ui_textures_ok++;
+            rec.ui_texture_samples.push({
+              name:trunc(e.name,70),width:tex.w,height:tex.h,
+              kind:tex.kind,png_bytes:png.length,
+              png_sha256:createHash("sha256").update(png).digest("hex").slice(0,24)
+            });
+          }catch(err){
+            rec.ui_textures_failed++;
+            if(!rec.first_texture_error)rec.first_texture_error=trunc(err.message,200);
+          }
+        }
+      }
     }catch(e){rec.parse_error=trunc(e.message,300);}
     try{
       const sets=readGuiSets(buf);
