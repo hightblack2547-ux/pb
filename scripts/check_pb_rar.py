@@ -73,6 +73,10 @@ def main():
             tex = by_file.get((candidate + "_Textures.i3Pack").lower())
             if tex:
                 selected.append(tex)
+            for suffix in ("_Col", "_Scene"):
+                related = by_file.get((candidate + suffix + ".i3Pack").lower())
+                if related:
+                    selected.append(related)
             break
     preferred = ("Weapon_AK-47_PBIC2013", "Weapon_AK-47", "Weapon_Colt45",
                  "Weapon_AUG_A3", "Weapon_M4A1", "Weapon_Aks74u")
@@ -112,6 +116,8 @@ def main():
         ok = process.returncode == 0 and target.stat().st_size == pack_size
         if not ok:
             target.unlink(missing_ok=True)
+        elif target.suffix != ".i3Pack":
+            target.rename(pack_dir / (target.stem + ".i3Pack"))
         records.append({"pack": base, "bytes": pack_size, "status": "extracted" if ok else "failed"})
     available = {x["pack"].lower() for x in records if x["status"] == "extracted"}
     if (map_name + ".i3Pack").lower() not in available:
@@ -189,6 +195,25 @@ def main():
         result["steps"]["glb_probe"] = {"exit_code": rc, "status": probe_status,
                                          "data": probe,
                                          "log_tail": log[-1200:] if not probe else ""}
+        save()
+    if map_name and (pack_dir / (map_name + "_Col.i3Pack")).exists():
+        out_root = (ROOT / "glb_probe" / "maps").resolve()
+        rc, log = cmd("node", str((tool / "export-collision.mjs").resolve()),
+                      map_name, "--pack-dir", str(pack_dir.resolve()), "--out", str(out_root),
+                      timeout=420)
+        col_json = out_root / map_name.lower() / "collision.json"
+        col_glb = out_root / map_name.lower() / "collision.glb"
+        col_summary = {}
+        if col_json.exists():
+            raw = json.loads(col_json.read_text(encoding="utf-8"))
+            col_summary = {key: raw.get(key) for key in
+                           ("meshes", "tris", "verts", "bounds", "spawnSuggestion", "spawnSource")}
+            col_summary["respawn_count"] = len(raw.get("respawns", []))
+        result["steps"]["collision_probe"] = {
+            "exit_code": rc, "summary": col_summary,
+            "glb_bytes": col_glb.stat().st_size if col_glb.exists() else 0,
+            "log_tail": log[-1400:],
+        }
         save()
 
 if __name__ == "__main__":
