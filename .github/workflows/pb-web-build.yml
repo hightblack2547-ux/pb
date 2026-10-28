@@ -36,6 +36,14 @@ jobs:
           mkdir -p webport/dist/launcher webport/dist/training
           cp web-ui/index.html web-ui/style.css web-ui/app.js webport/dist/launcher/
           cp web-ui/training/index.html web-ui/training/training.js web-ui/training/training.css webport/dist/training/
+      - name: Build 3D GLB map loader (Three.js / Vite)
+        shell: bash
+        run: |
+          mkdir -p webport/map3d/src
+          cp web-ui/map3d/index.html webport/map3d/
+          cp web-ui/map3d/src/main.js webport/map3d/src/
+          cd webport
+          npx vite build --root map3d --base /map3d/ --outDir ../dist/map3d --emptyOutDir
       - name: Verify static bundle and write result
         shell: bash
         run: |
@@ -45,6 +53,7 @@ jobs:
           test -f webport/dist/launcher/app.js
           test -f webport/dist/training/training.js
           test -f webport/dist/training/index.html
+          test -f webport/dist/map3d/index.html
           test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
           echo '## Browser client build' >> "$GITHUB_STEP_SUMMARY"
           echo 'Vite/TypeScript production bundle: built (not deployed).' >> "$GITHUB_STEP_SUMMARY"
