@@ -14,6 +14,9 @@ fi
 
 npm ci --ignore-scripts --no-audit --no-fund --prefix webport
 npm ci --ignore-scripts --no-audit --no-fund --prefix webport/server
+# Allow on-screen touch input in the real Webport offline engine on iPhone.
+# This patch is applied only to the temporary upstream checkout, never to its repository.
+node scripts/patch-mobile-input.mjs webport/src/game/input.ts
 npm run build:prod --prefix webport
 
 node --check web-ui/app.js
@@ -30,7 +33,16 @@ cp web-ui/map3d/src/main.js webport/map3d/src/
   npx --no-install vite build map3d --base /map3d/ --outDir ../dist/map3d --emptyOutDir
 )
 
+# The launcher sends players to the actual upstream client, not our synthetic raycast demo.
+node --check web-ui/real-game/pb-touch.js
+node --check scripts/patch-mobile-input.mjs
+node --check scripts/package-real-game.mjs
+node scripts/package-real-game.mjs webport/dist
+
 test -s webport/dist/index.html
+test -s webport/dist/game/index.html
+test -s webport/dist/play/index.html
+test -s webport/dist/pb-touch.js
 test -s webport/dist/launcher/index.html
 test -s webport/dist/launcher/app.js
 test -s webport/dist/training/index.html
@@ -40,4 +52,4 @@ test -n "$(find webport/dist/map3d -type f -name '*.js' -print -quit)"
 test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
 
 echo 'Build succeeded; publish directory: webport/dist'
-echo 'Game maps, weapon models and character models are NOT included.'
+echo 'Original Zepetto-owned game assets are NOT included. Offline real Webport engine requires authorized Cross assets.'
