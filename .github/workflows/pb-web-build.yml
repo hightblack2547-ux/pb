@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/pb-web-build.yml
+      - web-ui/**
   workflow_dispatch:
 permissions:
   contents: read
@@ -27,10 +28,19 @@ jobs:
       - name: Build browser client without proprietary assets
         run: npm run build:prod
         working-directory: webport
+      - name: Check launcher JavaScript and install custom UI
+        shell: bash
+        run: |
+          node --check web-ui/app.js
+          mkdir -p webport/dist/launcher
+          cp web-ui/index.html web-ui/style.css web-ui/app.js webport/dist/launcher/
       - name: Verify static bundle and write result
         shell: bash
         run: |
           test -f webport/dist/index.html
+          test -f webport/dist/launcher/index.html
+          test -f webport/dist/launcher/style.css
+          test -f webport/dist/launcher/app.js
           test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
           echo '## Browser client build' >> "$GITHUB_STEP_SUMMARY"
           echo 'Vite/TypeScript production bundle: built (not deployed).' >> "$GITHUB_STEP_SUMMARY"
@@ -38,3 +48,11 @@ jobs:
           echo 'No Point Blank assets or private data are bundled in this test.' >> "$GITHUB_STEP_SUMMARY"
           echo '' >> "$GITHUB_STEP_SUMMARY"
           du -sh webport/dist | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload Netlify-ready code shell (NO GAME ASSETS)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb-webport-shell-netlify
+          path: webport/dist/
+          if-no-files-found: error
+          retention-days: 7
