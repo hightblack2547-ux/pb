@@ -185,20 +185,21 @@ def main():
     # from the RAR, not inferred from platform-specific assumptions.
     ui_pick = []
     for term in ("ui_project_main", "ui_project_login", "ui_project_lobby",
-                 "ui_project_popup", "ui_v11", "ui_re2"):
+                 "ui_project_popup", "ui_v11", "ui_re2",
+                 "ui_main", "ui_loading", "ui_interface", "ui_ingame-hud"):
         found = next(((n, sz) for n, sz in ui_entries if
                       pathlib.PurePosixPath(n).stem.lower() == term
                       and 200 < sz < 35000000), None)
         if found and found not in ui_pick:
             ui_pick.append(found)
     for n, sz in ui_entries:
-        if len(ui_pick) >= 6:
+        if len(ui_pick) >= 11:
             break
         if ((n, sz) not in ui_pick and 200 < sz < 15000000
                 and any(x in pathlib.PurePosixPath(n).stem.lower()
                         for x in ("project", "login", "lobby", "menu", "main"))):
             ui_pick.append((n, sz))
-    ui_pick = ui_pick[:6]
+    ui_pick = ui_pick[:11]
     selected.extend(ui_pick)
     ui_names = [pathlib.PurePosixPath(n).stem for n, _ in ui_pick]
     pack_dir = ROOT / "selected_packs"
