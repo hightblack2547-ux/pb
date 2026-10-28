@@ -21,6 +21,9 @@ jobs:
       - name: Install browser build dependencies without native postinstall scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
         working-directory: webport
+      - name: Install server type dependencies required by shared TypeScript imports
+        run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: webport/server
       - name: Build browser client without proprietary assets
         run: npm run build:prod
         working-directory: webport
