@@ -6,6 +6,8 @@ on:
       - .github/workflows/pb-web-build.yml
       - netlify.toml
       - scripts/build-netlify.sh
+      - scripts/patch-mobile-input.mjs
+      - scripts/package-real-game.mjs
       - web-ui/**
   workflow_dispatch:
 permissions:
@@ -28,6 +30,9 @@ jobs:
           test -f webport/dist/launcher/index.html
           test -f webport/dist/launcher/app.js
           test -f webport/dist/map3d/index.html
+          test -f webport/dist/game/index.html
+          test -f webport/dist/play/index.html
+          test -f webport/dist/pb-touch.js
           test -n "$(find webport/dist/map3d -type f -name '*.js' -print -quit)"
           echo '## PB Webport static build' >> "$GITHUB_STEP_SUMMARY"
           echo 'GitHub Actions executed scripts/build-netlify.sh, same build as Netlify.' >> "$GITHUB_STEP_SUMMARY"
