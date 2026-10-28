@@ -8,6 +8,7 @@ on:
       - scripts/build-netlify.sh
       - scripts/patch-mobile-input.mjs
       - scripts/package-real-game.mjs
+      - scripts/export-title-catalog.mjs
       - web-ui/**
   workflow_dispatch:
 permissions:
@@ -32,6 +33,8 @@ jobs:
           test -f webport/dist/map3d/index.html
           test -f webport/dist/game/index.html
           test -f webport/dist/play/index.html
+          test -f webport/dist/collection/index.html
+          test -f webport/dist/collection/title-catalog.json
           test -f webport/dist/pb-touch.js
           test -n "$(find webport/dist/map3d -type f -name '*.js' -print -quit)"
           echo '## PB Webport static build' >> "$GITHUB_STEP_SUMMARY"
