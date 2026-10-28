@@ -25,12 +25,41 @@ def cmd(*args, cwd=None, timeout=1800):
 
 def main():
     import gdown
-    output = gdown.download(id=FILE_ID, output=str(RAR), quiet=False, resume=True)
-    size = RAR.stat().st_size if RAR.exists() else 0
-    result["steps"]["download"] = {"size": size, "complete": bool(output) and size == EXPECTED_BYTES}
+    # Drive sometimes refuses a 5 GB public download after several CI runs.
+    # The user has shared two links to the same-name/same-size RAR. Try both
+    # as independent clean downloads; never resume across different file IDs.
+    sources = [FILE_ID, "151u_yo7Ovl6WwihU7PFObJCM15sBGiz9"]
+    errors = []
+    output = None
+    size = 0
+    used_source = None
+    for source_id in dict.fromkeys(sources):
+        for attempt in range(2):
+            RAR.unlink(missing_ok=True)
+            try:
+                output = gdown.download(id=source_id, output=str(RAR),
+                                        quiet=False, resume=False, use_cookies=False)
+                size = RAR.stat().st_size if RAR.exists() else 0
+                if output and size == EXPECTED_BYTES:
+                    used_source = source_id
+                    break
+                errors.append(f"size mismatch: {size} bytes")
+            except Exception as ex:
+                errors.append(str(ex)[:160])
+            if attempt == 0:
+                import time
+                time.sleep(12)
+        if used_source:
+            break
+    result["steps"]["download"] = {
+        "size": size, "complete": bool(used_source),
+        "source": "primary" if used_source == FILE_ID else ("alternate" if used_source else None),
+        "errors": errors[-4:] if not used_source else [],
+    }
     save()
-    if size != EXPECTED_BYTES:
-        raise RuntimeError(f"Incomplete download: expected {EXPECTED_BYTES}, got {size}")
+    if not used_source:
+        raise RuntimeError("Drive access failed for both user-provided links: " +
+                           "; ".join(errors[-4:]))
     with RAR.open("rb") as f:
         if not f.read(8).startswith(b"Rar!\x1a\x07"):
             raise RuntimeError("Not a RAR archive")
