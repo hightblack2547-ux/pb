@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090e17">
+  <meta name="robots" content="noindex,nofollow">
+  <title>PB Webport • Development Launcher</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"><div class="halo"></div><div class="grid-lines"></div></div>
+  <div class="shell">
+    <header class="bar">
+      <div class="logo"><span class="logo-mark">PB</span><span><b>PROJECT WEBPORT</b><small>PORTABLE / SAFARI DEVELOPMENT</small></span></div>
+      <span id="build-tag" class="build-tag">DEVELOPMENT • NOT LIVE</span>
+    </header>
+    <main id="login-view" class="view">
+      <div class="login-grid">
+        <section class="hero">
+          <div class="eyebrow">BROWSER PORT // 001</div>
+          <h1>READY FOR<br><em>DEPLOYMENT</em></h1>
+          <p>หน้าทดสอบเมนูเว็บสำหรับ Point Blank Portable — เตรียมคลังปืน ห้องฝึก และการเข้าเกมบน Safari</p>
+          <div class="progress-label">ASSET INTEGRATION <strong>IN DEVELOPMENT</strong></div>
+          <div class="meter"><span></span></div>
+          <p class="note">เกมต้นฉบับและระบบออนไลน์ยังไม่พร้อมเปิดเล่น หน้านี้เป็น UI ทดสอบ ไม่ใช่ตัวเกมที่เผยแพร่แล้ว</p>
+        </section>
+        <section class="login-card">
+          <div class="eyebrow">LOCAL ACCESS</div>
+          <h2>เข้าเมนูทดสอบ</h2>
+          <p>ใส่ชื่อเรียกในเครื่องนี้เพื่อเปิดหน้าเมนู โดยไม่ต้องใช้บัญชีเกมจริง</p>
+          <form id="guest-form">
+            <label for="nickname">ชื่อผู้เล่น (เฉพาะอุปกรณ์นี้)</label>
+            <input id="nickname" autocomplete="nickname" maxlength="18" minlength="2" required placeholder="YOUR CALLSIGN" />
+            <button class="button primary" type="submit">เข้าเมนู <span aria-hidden="true">›</span></button>
+          </form>
+          <div class="mini-warning">GUEST MODE · ไม่มีการสมัครสมาชิกหรือส่งรหัสผ่าน</div>
+        </section>
+      </div>
+    </main>
+    <main id="lobby-view" class="view hidden">
+      <div class="dashboard-head">
+        <div><div class="eyebrow">SYSTEM LOBBY</div><h1>WELCOME, <span id="callsign">SOLDIER</span></h1><p id="system-message">เลือกเมนูเพื่อดูสิ่งที่พัฒนาแล้ว</p></div>
+        <button type="button" id="logout" class="button subtle">ออกจากเมนู</button>
+      </div>
+      <nav class="tabs" aria-label="หน้าจอเกม">
+        <button class="tab active" data-panel="home" type="button">ศูนย์บัญชาการ</button>
+        <button class="tab" data-panel="arsenal" type="button">คลังอาวุธ</button>
+        <button class="tab" data-panel="training" type="button">โหมดฝึก</button>
+        <button class="tab" data-panel="status" type="button">สถานะโปรเจกต์</button>
+      </nav>
+      <section class="panel" id="panel-home">
+        <div class="tiles">
+          <button type="button" class="tile" data-go="training"><span class="tile-index">01 / TRAINING</span><span class="tile-title">ฝึกกับบอต</span><span class="tile-desc">ทดสอบเข้าแผนที่ Burning Hall เมื่อมีไฟล์เกมสำหรับเว็บครบ</span><span class="tile-arrow">↗</span></button>
+          <button type="button" class="tile" data-go="arsenal"><span class="tile-index">02 / ARMORY</span><span class="tile-title">คลังอาวุธ</span><span class="tile-desc">เลือกปืนทดสอบจากรุ่นที่แปลงโมเดลผ่านแล้ว</span><span class="tile-arrow">↗</span></button>
+          <button type="button" class="tile" data-go="status"><span class="tile-index">03 / SYSTEM</span><span class="tile-title">ความพร้อม</span><span class="tile-desc">ดูงานที่ผ่านการ Build และรายการที่ยังต้องพัฒนา</span><span class="tile-arrow">↗</span></button>
+        </div>
+        <div class="hint">MULTIPLAYER <strong>ยังไม่เปิด</strong> — ต้องมีระบบเซิร์ฟเวอร์สำหรับเล่นออนไลน์</div>
+      </section>
+      <section class="panel hidden" id="panel-arsenal">
+        <div class="section-heading"><div><div class="eyebrow">WEAPON LOADOUT</div><h2>คลังอาวุธ</h2></div><span class="right-note">โมเดลที่ตรวจสอบแล้ว · ไม่ใช่ระบบ Inventory จริง</span></div>
+        <div class="arsenal-grid"><div id="weapons" class="weapon-list"></div><aside class="equipment"><span class="eyebrow">EQUIPPED</span><h3 id="selected-weapon">—</h3><p id="weapon-details"></p><button id="equip-weapon" type="button" class="button primary">เลือกเป็นปืนทดสอบ</button><p id="equip-result" class="note">การเลือกบันทึกเฉพาะในเมนู ยังไม่ผูกกับตัวเกม</p></aside></div>
+      </section>
+      <section class="panel hidden" id="panel-training">
+        <div class="section-heading"><div><div class="eyebrow">LOCAL SIMULATION</div><h2>ห้องฝึก</h2></div><span class="right-note">OFFLINE ONLY</span></div>
+        <div class="mission-card">
+          <div><span class="eyebrow">MAP 01</span><h3>BURNING HALL</h3><p>แผนที่และ Collision แปลงผ่านแล้ว แต่ยังต้องนำ Assets เข้ากับเว็บเกมให้ครบ</p></div>
+          <div class="mission-actions"><button class="button primary" id="start-training" type="button">ตรวจไฟล์และเริ่มฝึก</button><div class="mini-warning">หากไฟล์ไม่ครบ ระบบจะไม่เปิดฉากทดสอบหลอกว่าเป็นเกมจริง</div></div>
+        </div>
+        <div id="training-check" class="check-results" role="status" aria-live="polite">ยังไม่ได้ตรวจ Assets บนเว็บไซต์นี้</div>
+      </section>
+      <section class="panel hidden" id="panel-status">
+        <div class="section-heading"><div><div class="eyebrow">PROJECT REPORT</div><h2>สถานะระบบ</h2></div><a href="https://github.com/hightblack2547-ux/pb/blob/main/docs/PROGRESS.md" target="_blank" rel="noreferrer" class="report-link">รายงานบน GitHub ↗</a></div>
+        <div class="status-list">
+          <div><span>แปลงแผนที่ 3D / Collision</span><strong class="pass">ผ่านการแปลง</strong></div>
+          <div><span>โมเดลปืนเบื้องต้น</span><strong class="pass">ผ่านการแปลง</strong></div>
+          <div><span>REBEL Male + แอนิเมชัน</span><strong class="pass">ผ่านตัวแปลง (ยังไม่ทดสอบภาพจริง)</strong></div>
+          <div><span>Build เว็บ TypeScript / Vite</span><strong class="pass">ผ่าน CI</strong></div>
+          <div><span>UI และคลังปืนบนเว็บ</span><strong class="pass">ตัวต้นแบบเมนู</strong></div>
+          <div><span>Safari + เกมที่เล่นได้</span><strong class="pending">รอรวม Assets และทดสอบ</strong></div>
+          <div><span>เซิร์ฟเวอร์ออนไลน์ / บัญชีจริง</span><strong class="pending">ยังไม่ได้พัฒนาในชุดนี้</strong></div>
+        </div>
+      </section>
+    </main>
+    <footer><span>PB PORTABLE WEBPORT / DEVELOPMENT SYSTEM</span><span>NO ORIGINAL GAME ART UPLOADED</span></footer>
+  </div>
+</body>
+</html>
