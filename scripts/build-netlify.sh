@@ -17,6 +17,7 @@ npm ci --ignore-scripts --no-audit --no-fund --prefix webport/server
 # Allow on-screen touch input in the real Webport offline engine on iPhone.
 # This patch is applied only to the temporary upstream checkout, never to its repository.
 node scripts/patch-mobile-input.mjs webport/src/game/input.ts
+node scripts/patch-offline-loadout.mjs webport/src/game/testLoadout.ts
 npm run build:prod --prefix webport
 
 node --check web-ui/app.js
@@ -38,6 +39,7 @@ node --check web-ui/real-game/pb-touch.js
 node --check web-ui/real-game/import-private-assets.js
 node --check web-ui/real-game/private-assets-sw.js
 node --check scripts/patch-mobile-input.mjs
+node --check scripts/patch-offline-loadout.mjs
 node --check scripts/package-real-game.mjs
 node scripts/package-real-game.mjs webport/dist
 
