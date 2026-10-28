@@ -71,6 +71,39 @@ uploaded directly to this installer. It must first be exported in the
 This feature has passed syntax/build checks but **not** a full real-asset
 iPhone Safari gameplay test.
 
+## Weapon skins, maps, characters, UI, rank and titles (V8)
+
+`/collection/` is an **offline Safari-friendly asset-driven menu** for the
+requested narrow scope, without implementing online rooms or login.
+
+- **Weapons and skins**: reads `/assets/weapons/models/index.json` and
+  `/assets/cross/weapons/weapons.json`, lists actual model-to-item IDs,
+  searches categories and previews the authorized GLB with Three.js.
+  A chosen item is stored on-device and fed into the upstream Webport
+  **offline** `?play` default loadout when its game-export metadata supports it.
+  This is not an account inventory nor an assertion that every weapon
+  model has complete animations, sounds and textures.
+- **Characters**: lists `/assets/chars/index.json`, previews each GLB,
+  and passes the selected character's `charRed`/`charBlue` query
+  to the original offline Webport when launching from `/collection/`.
+- **Maps**: lists `/assets/maps/index.json`, shows metadata, and
+  previews a selected map's `visual.glb` only after tapping the
+  **Preview map** button (to avoid freezing iPhone with huge 3D models).
+- **Ranks and titles**: implements a local-only display/profile sandbox.
+  Title IDs, rank requirements and badge/precedence conditions are
+  exported from the publicly available source metadata of the upstream
+  Webport. Local title acquisition, equipment and rank edits simulate
+  the UI; **they are not authoritative**. Real rank/EXP/title ownership,
+  purchases and persistence between players require the upstream Node
+  server and Postgres. Original rank/title names require the user's
+  licensed Cross UI strings (`/assets/ui/cross/strings.json`).
+- **UI**: this menu is custom and does not reproduce licensed original
+  art. The upstream game also has its own Cross inventory/profile
+  screens, which require licensed UI assets and its login/server flow.
+
+No Zepetto game models, icons, textures or art were added to the public
+GitHub repository or to the Netlify build.
+
 ## Game assets
 
 The upstream client expects its own **Point Blank Cross** installation.
