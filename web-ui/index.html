@@ -49,6 +49,7 @@
         <button class="tab" data-panel="arsenal" type="button">คลังอาวุธ</button>
         <button class="tab" data-panel="training" type="button">โหมดฝึก</button>
         <button class="tab" data-panel="status" type="button">สถานะโปรเจกต์</button>
+        <a class="tab" href="/collection/">ยศ / ฉายา / สกิน</a>
       </nav>
       <section class="panel" id="panel-home">
         <div class="tiles">
@@ -56,11 +57,12 @@
           <button type="button" class="tile" data-go="arsenal"><span class="tile-index">02 / ARMORY</span><span class="tile-title">คลังอาวุธ</span><span class="tile-desc">เลือกปืนทดสอบจากรุ่นที่แปลงโมเดลผ่านแล้ว</span><span class="tile-arrow">↗</span></button>
           <button type="button" class="tile" data-go="status"><span class="tile-index">03 / SYSTEM</span><span class="tile-title">ความพร้อม</span><span class="tile-desc">ดูงานที่ผ่านการ Build และรายการที่ยังต้องพัฒนา</span><span class="tile-arrow">↗</span></button>
         </div>
+        <div class="hint"><a href="/collection/" class="button primary">เปิดคลังแสงจริง / ตัวละคร / แผนที่ / ยศ / ฉายา</a><p>อ่านข้อมูลจากไฟล์ Cross ที่นำเข้าบน iPhone และเก็บโปรไฟล์ทดลองในเครื่อง</p></div>
         <div class="hint">MULTIPLAYER <strong>ยังไม่เปิด</strong> — ต้องมีระบบเซิร์ฟเวอร์สำหรับเล่นออนไลน์</div>
       </section>
       <section class="panel hidden" id="panel-arsenal">
         <div class="section-heading"><div><div class="eyebrow">WEAPON LOADOUT</div><h2>คลังอาวุธ</h2></div><span class="right-note">โมเดลที่ตรวจสอบแล้ว · ไม่ใช่ระบบ Inventory จริง</span></div>
-        <div class="arsenal-grid"><div id="weapons" class="weapon-list"></div><aside class="equipment"><span class="eyebrow">EQUIPPED</span><h3 id="selected-weapon">—</h3><p id="weapon-details"></p><button id="equip-weapon" type="button" class="button primary">เลือกเป็นปืนทดสอบ</button><p id="equip-result" class="note">การเลือกบันทึกเฉพาะในเมนู ยังไม่ผูกกับตัวเกม</p></aside></div>
+        <p><a class="button primary" href="/collection/">ไปหน้าคลังแสงและพรีวิวโมเดล GLB จริง</a></p><div class="arsenal-grid"><div id="weapons" class="weapon-list"></div><aside class="equipment"><span class="eyebrow">EQUIPPED</span><h3 id="selected-weapon">—</h3><p id="weapon-details"></p><button id="equip-weapon" type="button" class="button primary">เลือกเป็นปืนทดสอบ</button><p id="equip-result" class="note">การเลือกบันทึกเฉพาะในเมนู ยังไม่ผูกกับตัวเกม</p></aside></div>
       </section>
       <section class="panel hidden" id="panel-training">
         <div class="section-heading"><div><div class="eyebrow">UPSTREAM WEBPORT GAME</div><h2>เข้าสู่เกม Webport</h2></div><span class="right-note">OFFLINE ONLY</span></div>
