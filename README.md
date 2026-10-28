@@ -1,13 +1,48 @@
-# Point Blank Portable — Cloud Inspector
+# PB Portable → Webport development
 
-This repository hosts diagnostic scripts for checking a user-provided Point Blank Portable RAR archive without executing any game executables or publishing game assets.
+This is an **unofficial, experimental** browser porting workspace. It contains
+tools, tests, status reports and a custom Thai web launcher. It does **not**
+contain or distribute Point Blank game models, textures, maps, binaries or
+credentials.
 
-## Run
+## What's working
 
-Open **Actions → Check PB Portable → Run workflow**, provide the Google Drive file ID as `drive_file_id`, and launch. Download the `pb-diagnostics-json` artifact from the completed run to inspect the results.
+- Reads **Biah/PFN2** Point Blank Portable .i3Pack containers.
+- Converts and validates selected map, collision, weapon and character GLBs in
+  **temporary GitHub Actions runners**.
+- Validates the 100-clip cross-character animation export for REBEL Male
+  (visual correctness and licensing still require review).
+- Builds the upstream Point Blank Webport TypeScript/Vite client for static
+  hosting.
+- Builds **/launcher/** — a responsive Thai guest-login, lobby, armory and
+  offline-training menu, with a check for required assets before attempting
+  to start a game.
 
-The workflow downloads the archive to an ephemeral runner, extracts only one small `.i3Pack` sample, and tests `pbx unpack`. The raw game archive and extracted assets are **not** uploaded to GitHub. The original client may not be compatible with the web port.
+See [verified progress](docs/PROGRESS.md) for measurements and limitations.
 
-**Security:** This repository is public. Treat workflow inputs and logs as potentially public. Do not provide a private file ID without first verifying sharing permissions. Do not grant public edit access to any Google Drive file.
+## Get the Netlify shell
 
-**Copyright:** Only process files you have rights to use. This tool grants no redistribution rights for commercial game assets.
+Go to [Actions → Check static Safari / Netlify build](https://github.com/hightblack2547-ux/pb/actions/workflows/pb-web-build.yml).
+Open a successful run and download **pb-webport-shell-netlify** under
+Artifacts. Extract the ZIP, and the folder's contents can be used as a static
+site build. The launcher is at `/launcher/`.
+
+This is **only the browser client and prototype launcher**; it will not start
+a real match until compatible game assets have been added *with permission*.
+Its Guest nickname is stored on the device and is **not an authenticated
+Point Blank account**. The multiplayer account/database/game server is not
+provided by Netlify static hosting.
+
+## Asset diagnostics
+
+[Actions → Check PB Portable RAR](https://github.com/hightblack2547-ux/pb/actions/workflows/pb-cloud-check.yml)
+runs the private conversion probe in an ephemeral GitHub worker. Only a JSON
+**diagnostic report** is uploaded as a GitHub Actions artifact; original game
+resources are **not** uploaded to the public repository.
+
+**Privacy:** This repository and its workflow logs are public. Do not expose
+sensitive Google Drive files or secrets. Avoid granting public edit access to
+Drive files.
+
+**Rights:** Only process or deploy game files you are authorized to use.
+A successful technical conversion does not grant redistribution rights.
