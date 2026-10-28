@@ -1,0 +1,39 @@
+name: Check PB Portable RAR
+on:
+  workflow_dispatch:
+    inputs:
+      drive_file_id:
+        description: 'Google Drive file ID'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PB_DRIVE_FILE_ID: ${{ inputs.drive_file_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y p7zip-full
+          python -m pip install --upgrade gdown
+      - name: Inspect one pack
+        run: python scripts/check_pb_rar.py
+      - name: Upload JSON diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb-diagnostics-json
+          path: pb_cloud_result.json
+          if-no-files-found: warn
+          retention-days: 3
