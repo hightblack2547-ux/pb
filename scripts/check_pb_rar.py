@@ -95,6 +95,38 @@ def main():
         if 100000 < candidate_size < 30000000 and base not in weapon_names:
             selected.append((candidate_name, candidate_size))
             weapon_names.append(base[:-7])
+    # Look for character packs in this Portable release. The upstream
+    # exporter expects Chara_<name>.i3Pack; do not assume Chara.i3Pack
+    # contains the same independent rig format.
+    character_entries = sorted(
+        [(k, value[1]) for k, value in by_file.items() if k.startswith("chara")],
+        key=lambda x: x[0]
+    )
+    result["steps"]["character_inventory"] = {
+        "count": len(character_entries),
+        "examples": [{"file": k, "bytes": n} for k, n in character_entries[:40]],
+    }
+    preferred_chars = ("Chara_SWAT_Male", "Chara_REBEL_Male", "Chara_SWAT_Female",
+                       "Chara_REBEL_Female", "Chara_D-Fox")
+    char_options = [by_file[(n + ".i3pack").lower()] for n in preferred_chars
+                    if (n + ".i3pack").lower() in by_file]
+    if not char_options:
+        char_options = sorted(
+            [value for key, value in by_file.items()
+             if key.startswith("chara_") and key.endswith(".i3pack")
+             and 100000 < value[1] < 45000000],
+            key=lambda x: x[1], reverse=True
+        )[:2]
+    character_names = []
+    for archive_name, archive_bytes in char_options:
+        base = pathlib.PurePosixPath(archive_name).name
+        if len(character_names) >= 2:
+            break
+        if (base.lower().startswith("chara_") and
+                100000 < archive_bytes < 45000000 and
+                re.fullmatch(r"[A-Za-z0-9_.-]+", base)):
+            selected.append((archive_name, archive_bytes))
+            character_names.append(base[6:-7])
     pack_dir = ROOT / "selected_packs"
     pack_dir.mkdir(exist_ok=True)
     records = []
@@ -123,7 +155,12 @@ def main():
     if (map_name + ".i3Pack").lower() not in available:
         map_name = ""
     weapon_names = [name for name in weapon_names if (name + ".i3Pack").lower() in available]
-    result["steps"]["probe_packs"] = {"map": map_name, "weapons": weapon_names, "packs": records}
+    character_names = [name for name in character_names if
+                       ("Chara_" + name + ".i3Pack").lower() in available]
+    result["steps"]["probe_packs"] = {
+        "map": map_name, "weapons": weapon_names,
+        "characters": character_names, "packs": records
+    }
     save()
     RAR.unlink()
     # Validate this client format separately from the upstream unpacker. This
@@ -179,17 +216,18 @@ def main():
     save()
     if rc != 0 or not manifest_count:
         raise RuntimeError("pbx unpack needs further Biah compatibility work; see pbx_unpack in JSON")
-    if map_name or weapon_names:
+    if map_name or weapon_names or character_names:
         probe_script = pathlib.Path("scripts/probe_glb.mjs").resolve()
         rc, log = cmd("node", str(probe_script), str(tool.resolve()), str(pack_dir.resolve()),
                       str((ROOT / "glb_probe").resolve()), map_name, ",".join(weapon_names),
-                      timeout=420)
+                      ",".join(character_names), timeout=420)
         marker = "PB_PROBE_JSON="
         try:
             probe = json.loads(log.rsplit(marker, 1)[1].splitlines()[0]) if marker in log else {}
         except (ValueError, IndexError):
             probe = {}
-        attempted = ([probe["map"]] if probe.get("map") else []) + probe.get("weapons", [])
+        attempted = (([probe["map"]] if probe.get("map") else []) +
+                     probe.get("weapons", []) + probe.get("characters", []))
         probe_status = ("passed" if attempted and all(x.get("ok") for x in attempted)
                         and not probe.get("errors") and rc == 0 else "partial")
         result["steps"]["glb_probe"] = {"exit_code": rc, "status": probe_status,
