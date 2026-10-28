@@ -13,7 +13,7 @@
   <div class="backdrop" aria-hidden="true"><div class="halo"></div><div class="grid-lines"></div></div>
   <div class="shell">
     <header class="bar">
-      <div class="logo"><span class="logo-mark">PB</span><span><b>PROJECT WEBPORT</b><small>PORTABLE / SAFARI DEVELOPMENT</small></span></div>
+      <div class="logo"><span class="logo-mark">PB</span><span><b>PROJECT WEBPORT</b><small>CROSS WEBPORT / SAFARI</small></span></div>
       <span id="build-tag" class="build-tag">DEVELOPMENT • NOT LIVE</span>
     </header>
     <main id="login-view" class="view">
@@ -21,10 +21,10 @@
         <section class="hero">
           <div class="eyebrow">BROWSER PORT // 001</div>
           <h1>READY FOR<br><em>DEPLOYMENT</em></h1>
-          <p>หน้าทดสอบเมนูเว็บสำหรับ Point Blank Portable — เตรียมคลังปืน ห้องฝึก และการเข้าเกมบน Safari</p>
+          <p>เมนูเข้า Point Blank Webport Client ตัวจริงจาก LeandroDettmer — ต้องติดตั้ง Assets ของ Point Blank Cross ที่มีสิทธิ์ใช้งานก่อน</p>
           <div class="progress-label">ASSET INTEGRATION <strong>IN DEVELOPMENT</strong></div>
           <div class="meter"><span></span></div>
-          <p class="note">เกมต้นฉบับและระบบออนไลน์ยังไม่พร้อมเปิดเล่น หน้านี้เป็น UI ทดสอบ ไม่ใช่ตัวเกมที่เผยแพร่แล้ว</p>
+          <p class="note">ตัวเอนจินเกม Webport อยู่ที่ /game/ แต่ไฟล์แผนที่ ปืน และตัวละครของ Zepetto ยังไม่รวมอยู่ในเว็บไซต์</p>
         </section>
         <section class="login-card">
           <div class="eyebrow">LOCAL ACCESS</div>
@@ -52,7 +52,7 @@
       </nav>
       <section class="panel" id="panel-home">
         <div class="tiles">
-          <button type="button" class="tile" data-go="training"><span class="tile-index">01 / TRAINING</span><span class="tile-title">ฝึกกับบอต</span><span class="tile-desc">ทดสอบเข้าแผนที่ Burning Hall เมื่อมีไฟล์เกมสำหรับเว็บครบ</span><span class="tile-arrow">↗</span></button>
+          <button type="button" class="tile" data-go="training"><span class="tile-index">01 / TRAINING</span><span class="tile-title">Webport ตัวจริง</span><span class="tile-desc">ตรวจไฟล์ที่ได้รับอนุญาต แล้วเข้าเกมของ LeandroDettmer เพื่อเล่นแบบออฟไลน์</span><span class="tile-arrow">↗</span></button>
           <button type="button" class="tile" data-go="arsenal"><span class="tile-index">02 / ARMORY</span><span class="tile-title">คลังอาวุธ</span><span class="tile-desc">เลือกปืนทดสอบจากรุ่นที่แปลงโมเดลผ่านแล้ว</span><span class="tile-arrow">↗</span></button>
           <button type="button" class="tile" data-go="status"><span class="tile-index">03 / SYSTEM</span><span class="tile-title">ความพร้อม</span><span class="tile-desc">ดูงานที่ผ่านการ Build และรายการที่ยังต้องพัฒนา</span><span class="tile-arrow">↗</span></button>
         </div>
@@ -63,10 +63,10 @@
         <div class="arsenal-grid"><div id="weapons" class="weapon-list"></div><aside class="equipment"><span class="eyebrow">EQUIPPED</span><h3 id="selected-weapon">—</h3><p id="weapon-details"></p><button id="equip-weapon" type="button" class="button primary">เลือกเป็นปืนทดสอบ</button><p id="equip-result" class="note">การเลือกบันทึกเฉพาะในเมนู ยังไม่ผูกกับตัวเกม</p></aside></div>
       </section>
       <section class="panel hidden" id="panel-training">
-        <div class="section-heading"><div><div class="eyebrow">LOCAL SIMULATION</div><h2>ห้องฝึก</h2></div><span class="right-note">OFFLINE ONLY</span></div>
+        <div class="section-heading"><div><div class="eyebrow">UPSTREAM WEBPORT GAME</div><h2>เข้าสู่เกม Webport</h2></div><span class="right-note">OFFLINE ONLY</span></div>
         <div class="mission-card">
-          <div><span class="eyebrow">MAP 01</span><h3>BURNING HALL</h3><p>แผนที่และ Collision แปลงผ่านแล้ว แต่ยังต้องนำ Assets เข้ากับเว็บเกมให้ครบ</p></div>
-          <div class="mission-actions"><button class="button primary" id="start-training" type="button">ตรวจไฟล์และเริ่มฝึก</button><div class="mini-warning">หากไฟล์ไม่ครบ ระบบจะไม่เปิดฉากทดสอบหลอกว่าเป็นเกมจริง</div></div>
+          <div><span class="eyebrow">REAL GAME CLIENT</span><h3>POINT BLANK WEBPORT</h3><p>ใช้ Client ต้นทางจริง ไม่ใช่ฉาก FPS จำลอง ระบบจะค้นหาแผนที่จากดัชนี Point Blank Cross ที่ติดตั้งอยู่บนเว็บไซต์</p></div>
+          <div class="mission-actions"><button class="button primary" id="start-training" type="button">ตรวจ Assets และเข้าเกมจริง</button><div class="mini-warning">หากไม่มี Assets ที่ได้รับอนุญาต ระบบจะแจ้งไฟล์ที่ขาดแทนการเปิดฉากจำลอง</div></div>
         </div>
         <div id="training-check" class="check-results" role="status" aria-live="polite">ยังไม่ได้ตรวจ Assets บนเว็บไซต์นี้</div>
       </section>
@@ -83,7 +83,7 @@
         </div>
       </section>
     </main>
-    <footer><span>PB PORTABLE WEBPORT / DEVELOPMENT SYSTEM</span><span>NO ORIGINAL GAME ART UPLOADED</span></footer>
+    <footer><span>PB CROSS WEBPORT / DEVELOPMENT SYSTEM</span><span>NO ORIGINAL GAME ART UPLOADED</span></footer>
   </div>
 </body>
 </html>
