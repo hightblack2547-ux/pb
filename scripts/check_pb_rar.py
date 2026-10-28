@@ -161,6 +161,47 @@ def main():
         "map": map_name, "weapons": weapon_names,
         "characters": character_names, "packs": records
     }
+    # Character animations are separate i3AnimPack files, usually nested
+    # below Chara/<name>. Preserve only aggregate file names in public JSON.
+    all_anim = [(name, n) for name, n in entries
+                if name.lower().endswith(".i3animpack")]
+    result["steps"]["animation_inventory"] = {
+        "count": len(all_anim),
+        "examples": [
+            {"file": pathlib.PurePosixPath(n).name, "bytes": size}
+            for n, size in all_anim[:30]
+        ],
+    }
+    anim_root = pack_dir / "animations"
+    animation_results = []
+    for char in character_names:
+        destination = anim_root / char
+        matches = []
+        for name, size in all_anim:
+            base = pathlib.PurePosixPath(name).name
+            if re.fullmatch(r"Chara_" + re.escape(char) +
+                            r"_(Common|Assault|HandGun|Knife|Death)\\.i3AnimPack",
+                            base, re.IGNORECASE):
+                matches.append((name, size))
+        destination.mkdir(parents=True, exist_ok=True)
+        for archive_name, anim_bytes in matches[:5]:
+            base = pathlib.PurePosixPath(archive_name).name
+            if not 100 < anim_bytes < 45000000:
+                animation_results.append({"character": char, "pack": base,
+                                          "status": "skipped_size"})
+                continue
+            target = destination / base
+            with target.open("wb") as f:
+                process = subprocess.run(["7z", "e", "-so", str(RAR), archive_name],
+                                         stdout=f, stderr=subprocess.PIPE, timeout=300)
+            ok = process.returncode == 0 and target.stat().st_size == anim_bytes
+            if not ok:
+                target.unlink(missing_ok=True)
+            animation_results.append({
+                "character": char, "pack": base, "bytes": anim_bytes,
+                "status": "extracted" if ok else "failed"
+            })
+    result["steps"]["animation_inventory"]["selected"] = animation_results
     save()
     RAR.unlink()
     # Validate this client format separately from the upstream unpacker. This
@@ -220,7 +261,7 @@ def main():
         probe_script = pathlib.Path("scripts/probe_glb.mjs").resolve()
         rc, log = cmd("node", str(probe_script), str(tool.resolve()), str(pack_dir.resolve()),
                       str((ROOT / "glb_probe").resolve()), map_name, ",".join(weapon_names),
-                      ",".join(character_names), timeout=420)
+                      ",".join(character_names), str(anim_root.resolve()), timeout=420)
         marker = "PB_PROBE_JSON="
         try:
             probe = json.loads(log.rsplit(marker, 1)[1].splitlines()[0]) if marker in log else {}
