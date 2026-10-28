@@ -42,4 +42,4 @@ async function check(){
 select.addEventListener("change",check);
 $("launch").addEventListener("click",()=>{if(select.value&&mapChoices.some(m=>m.id===select.value))location.assign("/game/?play&map="+encodeURIComponent(select.value)+"&bots=4")});
 check();
-</script></body></html>
+</script><script defer src="/import-private-assets.js"></script></body></html>
