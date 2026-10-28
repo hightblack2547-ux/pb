@@ -1,6 +1,6 @@
 # PB Portable Webport — Verified conversion progress
 
-Last verified: 2026-10-28 13:12 UTC
+Last verified: 2026-10-28 13:19 UTC
 
 ## Test run
 GitHub Actions [run 40662491631](https://github.com/hightblack2547-ux/pb/actions/runs/40662491631) completed successfully. Diagnostics are in the short-lived `pb-diagnostics-json` artifact; no source archive or extracted copyrighted game assets were uploaded.
@@ -22,13 +22,25 @@ GitHub Actions [run 40662491631](https://github.com/hightblack2547-ux/pb/actions
 | REBEL Male arms (first person) | yes | n/a | 193,232 | Rig exists, animations not yet validated |
 | SWAT Male body | no | n/a | n/a | Exporter reports `no body LOD`; compatibility work required |
 
+### Animation compatibility probe
+
+GitHub Actions [run 40695196387](https://github.com/hightblack2547-ux/pb/actions/runs/40695196387) completed successfully. The RAR includes **267 i3AnimPack** files. Five SWAT Male animation packs (Assault, Common, Death, HandGun, Knife) were extracted and used in a *private diagnostic experiment* to animate the REBEL Male 63-bone model.
+
+- **70** third-person clips emitted.
+- **30** first-person clips emitted.
+- Animated body GLB: **2,179,408 bytes**, exporter validation passed.
+- This is **cross-character animation retargeting by matching joint names**, not proof that every animation looks correct or matches original behavior. It requires visual inspection for mesh deformation, hands, and weapon reloads.
+- SWAT Male's own model remains unexportable by the current body LOD selector.
+
+All game assets remain on the ephemeral Actions runner; no model, animation, or texture source is hosted in this public repository.
+
 ### Browser build test
 
 GitHub Actions [run 40694279963](https://github.com/hightblack2547-ux/pb/actions/runs/40694279963) successfully built the upstream `point-blank-webport` production client using Node 24 and dependencies for both the root and server TypeScript projects. Resulting static `dist/` directory was 4.4 MB without proprietary assets. This verifies only the code build; Safari runtime and controls have not been tested.
 
 ### Not yet complete
 - Fix 17 missing map textures, one M4A1 texture reference
-- Identify/fix SWAT Male body LOD compatibility; validate character animation packs (REBEL Male body and first-person arms already exported without clips)
+- Fix SWAT Male body LOD compatibility; visually validate REBEL Male model animated with 70/30 clips borrowed from SWAT Male
 - Integrate compatible map/weapon/collision assets with the webport runtime
 - Test mobile input, Safari, FPS, and Netlify build
 - Verify the user's legal right to redistribute assets before any public hosting
