@@ -3,9 +3,9 @@ on:
   push:
     branches: [main]
     paths:
+      - .github/workflows/pb-web-build.yml
       - netlify.toml
       - scripts/build-netlify.sh
-      - .github/workflows/pb-web-build.yml
       - web-ui/**
   workflow_dispatch:
 permissions:
@@ -19,24 +19,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Build the same static site as Netlify
+      - name: Build same static site as Netlify
         run: bash scripts/build-netlify.sh
-      - name: Verify Netlify public paths
+      - name: Verify static bundle
         shell: bash
         run: |
-          test -s webport/dist/launcher/index.html
-          test -s webport/dist/map3d/index.html
-          test -s webport/dist/training/index.html
-          echo '## Same build script used by Netlify' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Build: bash scripts/build-netlify.sh' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Publish: webport/dist' >> "$GITHUB_STEP_SUMMARY"
-          echo 'No proprietary Point Blank assets included.' >> "$GITHUB_STEP_SUMMARY"
-          du -sh webport/dist | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Upload static demo artifact without licensed game assets
+          test -f webport/dist/index.html
+          test -f webport/dist/launcher/index.html
+          test -f webport/dist/launcher/app.js
+          test -f webport/dist/map3d/index.html
+          test -n "$(find webport/dist/map3d -type f -name '*.js' -print -quit)"
+          echo '## PB Webport static build' >> "$GITHUB_STEP_SUMMARY"
+          echo 'GitHub Actions executed scripts/build-netlify.sh, same build as Netlify.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No original Point Blank assets included or published.' >> "$GITHUB_STEP_SUMMARY"
+          du -sh webport/dist >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload static Netlify bundle (NO GAME ASSETS)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: pb-webport-netlify-build
+          name: pb-webport-shell-netlify
           path: webport/dist/
           if-no-files-found: error
           retention-days: 7
