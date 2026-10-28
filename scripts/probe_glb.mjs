@@ -78,9 +78,19 @@ try {
       record.error = String(error?.message || error).slice(0, 800);
     }
     if (record.ok && animationsRoot) {
-      const animDir = path.join(absolute(animationsRoot), name);
-      if (fs.existsSync(animDir) && fs.readdirSync(animDir).some((f) => /\\.i3AnimPack$/i.test(f))) {
-        record.animation_probe = { attempted: true };
+      let animDir = path.join(absolute(animationsRoot), name);
+      const hasAnimations = (dir) => fs.existsSync(dir) &&
+        fs.readdirSync(dir).some((f) => /\.i3AnimPack$/i.test(f));
+      let borrowed = false;
+      if (!hasAnimations(animDir) && name !== "SWAT_Male") {
+        // Experiment only: the main 63-bone REBEL rig may share animation bone
+        // names with SWAT Male. The resulting GLB is NOT published.
+        animDir = path.join(absolute(animationsRoot), "SWAT_Male");
+        borrowed = true;
+      }
+      if (hasAnimations(animDir)) {
+        record.animation_probe = { attempted: true, animation_source: path.basename(animDir),
+          borrowed_from_another_character: borrowed };
         try {
           const animated = exportChara(
             { name, team: "unknown", id, packDir: absolute(packRoot), animDir },
