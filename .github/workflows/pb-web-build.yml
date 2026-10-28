@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
     paths:
+      - netlify.toml
+      - scripts/build-netlify.sh
       - .github/workflows/pb-web-build.yml
       - web-ui/**
   workflow_dispatch:
@@ -17,55 +19,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Clone public browser-client source only
-        run: git clone --depth 1 https://github.com/LeandroDettmer/point-blank-webport.git webport
-      - name: Install browser build dependencies without native postinstall scripts
-        run: npm ci --ignore-scripts --no-audit --no-fund
-        working-directory: webport
-      - name: Install server type dependencies required by shared TypeScript imports
-        run: npm ci --ignore-scripts --no-audit --no-fund
-        working-directory: webport/server
-      - name: Build browser client without proprietary assets
-        run: npm run build:prod
-        working-directory: webport
-      - name: Check launcher JavaScript and install custom UI
+      - name: Build the same static site as Netlify
+        run: bash scripts/build-netlify.sh
+      - name: Verify Netlify public paths
         shell: bash
         run: |
-          node --check web-ui/app.js
-          node --check web-ui/training/training.js
-          mkdir -p webport/dist/launcher webport/dist/training
-          cp web-ui/index.html web-ui/style.css web-ui/app.js webport/dist/launcher/
-          cp web-ui/training/index.html web-ui/training/training.js web-ui/training/training.css webport/dist/training/
-      - name: Build 3D GLB map loader (Three.js / Vite)
-        shell: bash
-        run: |
-          mkdir -p webport/map3d/src
-          cp web-ui/map3d/index.html webport/map3d/
-          cp web-ui/map3d/src/main.js webport/map3d/src/
-          cd webport
-          npx vite build map3d --base /map3d/ --outDir ../dist/map3d --emptyOutDir
-      - name: Verify static bundle and write result
-        shell: bash
-        run: |
-          test -f webport/dist/index.html
-          test -f webport/dist/launcher/index.html
-          test -f webport/dist/launcher/style.css
-          test -f webport/dist/launcher/app.js
-          test -f webport/dist/training/training.js
-          test -f webport/dist/training/index.html
-          test -f webport/dist/map3d/index.html
-          test -n "$(find webport/dist/bundle -type f -name '*.js' -print -quit)"
-          echo '## Browser client build' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Vite/TypeScript production bundle: built (not deployed).' >> "$GITHUB_STEP_SUMMARY"
-          echo '' >> "$GITHUB_STEP_SUMMARY"
-          echo 'No Point Blank assets or private data are bundled in this test.' >> "$GITHUB_STEP_SUMMARY"
-          echo '' >> "$GITHUB_STEP_SUMMARY"
+          test -s webport/dist/launcher/index.html
+          test -s webport/dist/map3d/index.html
+          test -s webport/dist/training/index.html
+          echo '## Same build script used by Netlify' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Build: bash scripts/build-netlify.sh' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Publish: webport/dist' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No proprietary Point Blank assets included.' >> "$GITHUB_STEP_SUMMARY"
           du -sh webport/dist | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Upload Netlify-ready code shell (NO GAME ASSETS)
+      - name: Upload static demo artifact without licensed game assets
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: pb-webport-shell-netlify
+          name: pb-webport-netlify-build
           path: webport/dist/
           if-no-files-found: error
           retention-days: 7
