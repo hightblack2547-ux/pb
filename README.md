@@ -20,6 +20,37 @@ credentials.
 
 See [verified progress](docs/PROGRESS.md) for measurements and limitations.
 
+## Automatic GitHub → Netlify deploy
+
+The public repository includes `netlify.toml` and
+`scripts/build-netlify.sh`. A Netlify project connected to the
+`main` branch can now build the prototype automatically after each commit.
+
+- **Base directory:** repository root (leave blank)
+- **Build command:** `bash scripts/build-netlify.sh` (provided by `netlify.toml`)
+- **Publish directory:** `webport/dist` (provided by `netlify.toml`)
+- **Node.js:** 24
+- **Entrypoints:** `/` redirects to `/launcher/`; the 3D prototype is at `/map3d/`.
+
+The build clones the upstream public webport source, builds the
+TypeScript/Vite client, and includes the Thai launcher, mobile FPS controls
+and 3D GLB loader. GitHub Actions runs the **same build script** to verify
+that these steps work before production deployment.
+
+**Important:** A successful GitHub Actions run is not confirmation of a
+Netlify deploy. Check the linked Netlify site's **Deploys** page for
+`Published` status and test its URL.
+
+**Point Blank ownership:** The public build does **not** include Burning
+Hall textures/GLBs, licensed character models, weapon models, or an online
+multiplayer backend. Do not add copyrighted game data to this public
+repository without explicit distribution rights. The GLB loader supports
+`/assets/maps/burninghall/visual.glb`,
+`/assets/maps/burninghall/collision.glb`, and
+`/assets/maps/burninghall/collision.json` only when those authorized
+assets have been separately installed. Without them it clearly falls back
+to an original test map.
+
 ## Get the Netlify shell
 
 Go to [Actions → Check static Safari / Netlify build](https://github.com/hightblack2547-ux/pb/actions/workflows/pb-web-build.yml).
