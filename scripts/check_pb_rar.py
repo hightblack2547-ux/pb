@@ -180,7 +180,7 @@ def main():
         for name, size in all_anim:
             base = pathlib.PurePosixPath(name).name
             if re.fullmatch(r"Chara_" + re.escape(char) +
-                            r"_(Common|Assault|HandGun|Knife|Death)\\.i3AnimPack",
+                            r"_(Common|Assault|HandGun|Knife|Death)\.i3AnimPack",
                             base, re.IGNORECASE):
                 matches.append((name, size))
         destination.mkdir(parents=True, exist_ok=True)
