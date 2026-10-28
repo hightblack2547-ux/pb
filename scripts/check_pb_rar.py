@@ -102,7 +102,10 @@ def main():
         if pack_size > 45000000:
             records.append({"pack": base, "status": "skipped_size", "bytes": pack_size})
             continue
-        target = pack_dir / base
+        # The upstream model loader always opens a canonical .i3Pack suffix.
+        # Portable archives sometimes use .i3pack; normalize on the runner.
+        canonical = base[:-7] + ".i3Pack" if base.lower().endswith(".i3pack") else base
+        target = pack_dir / canonical
         with target.open("wb") as f:
             process = subprocess.run(["7z", "e", "-so", str(RAR), archive_name],
                                      stdout=f, stderr=subprocess.PIPE, timeout=300)
@@ -180,7 +183,11 @@ def main():
             probe = json.loads(log.rsplit(marker, 1)[1].splitlines()[0]) if marker in log else {}
         except (ValueError, IndexError):
             probe = {}
-        result["steps"]["glb_probe"] = {"exit_code": rc, "data": probe,
+        attempted = ([probe["map"]] if probe.get("map") else []) + probe.get("weapons", [])
+        probe_status = ("passed" if attempted and all(x.get("ok") for x in attempted)
+                        and not probe.get("errors") and rc == 0 else "partial")
+        result["steps"]["glb_probe"] = {"exit_code": rc, "status": probe_status,
+                                         "data": probe,
                                          "log_tail": log[-1200:] if not probe else ""}
         save()
 
