@@ -61,10 +61,30 @@ def main():
     result["steps"]["sample"] = {"bytes": expected, "sha256": hashlib.sha256(sample.read_bytes()).hexdigest()}
     save()
     RAR.unlink()
+    # Validate this client format separately from the upstream unpacker. This
+    # reports metadata only; neither the original archive nor extracted assets
+    # are uploaded as artifacts.
+    rc, log = cmd("python3", "scripts/biah_metadata.py", str(sample.resolve()), timeout=60)
+    if rc:
+        raise RuntimeError("Biah metadata parse failed: " + log[-1200:])
+    result["steps"]["biah_metadata"] = json.loads(log)
+    save()
     tool = ROOT / "pb-extract-tools"
     rc, log = cmd("git", "clone", "--depth", "1", "https://github.com/LeandroDettmer/pb-extract-tools-public.git", str(tool), timeout=300)
     if rc:
         raise RuntimeError("Git clone failed: " + log[-500:])
+    # The upstream unpacker checks for I3R2 or AVIX but Portable V1.1
+    # uses a Biah wrapper with the same verified header/table layout.
+    # Patch only a disposable clone in this diagnostic runner.
+    unpack_js = tool / "i3pack" / "unpack.mjs"
+    upstream = unpack_js.read_text(encoding="utf-8")
+    magic_check = "magic !== 'I3R2' && magic !== 'AVIX'"
+    if upstream.count(magic_check) != 1:
+        raise RuntimeError("Unpacker guard changed upstream; refusing an unsafe patch")
+    unpack_js.write_text(
+        upstream.replace(magic_check, magic_check + " && magic !== 'Biah'"),
+        encoding="utf-8"
+    )
     rc, log = cmd("npm", "install", "--no-audit", "--no-fund", cwd=tool, timeout=600)
     if rc:
         raise RuntimeError("npm install failed: " + log[-500:])
@@ -72,8 +92,18 @@ def main():
     out.mkdir(exist_ok=True)
     rc, log = cmd("node", "pbx.mjs", "unpack", str(sample.resolve()), "--out", str(out.resolve()), cwd=tool, timeout=300)
     extracted = [str(p.relative_to(out)) for p in out.rglob("*") if p.is_file()]
-    result["steps"]["pbx_unpack"] = {"returncode": rc, "outputs": extracted[:40], "output_count": len(extracted), "log_tail": log[-4000:]}
+    manifest_count = sum(1 for p in out.rglob("manifest.json"))
+    result["steps"]["pbx_unpack"] = {
+        "returncode": rc,
+        "outputs": extracted[:40],
+        "output_count": len(extracted),
+        "manifest_count": manifest_count,
+        "log_tail": log[-4000:],
+        "status": "passed" if rc == 0 and len(extracted) > 1 else ("partial" if len(extracted) > 1 else "failed")
+    }
     save()
+    if rc != 0 or not manifest_count:
+        raise RuntimeError("pbx unpack needs further Biah compatibility work; see pbx_unpack in JSON")
 
 if __name__ == "__main__":
     try:
