@@ -194,4 +194,16 @@ async function init(){
  renderWeapons();renderWeaponDetail();renderCharacters();renderCharaDetail();renderMaps();renderMapDetail();renderRank();renderTitles();
  if(state.selectedGun)void showGLB("weapon-preview",state.selectedGun.glb);
 }
+async function loadPrivateSkin(){
+ const img=$("private-skin-image"),box=$("private-skin");
+ if(!img||!box)return;
+ const url="/assets/skins/gh5007_dayak_diff.png";
+ try{
+  const response=await fetch(url,{method:"HEAD"});
+  if(response.ok&&!(response.headers.get("content-type")||"").includes("text/html")){
+   img.src=url;box.hidden=false;
+  }
+ }catch{/* Private texture not installed on this device */}
+}
 init();
+void loadPrivateSkin();
