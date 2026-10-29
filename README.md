@@ -12,8 +12,11 @@ in `/game/`, not just our synthetic FPS demo.
 
 - `/launcher/`: Thai development lobby. Its main play button opens `/play/`.
 - `/play/`: checks for valid **authorized Point Blank Cross assets**
-  and lists missing map/weapon files. It refuses to call the prototype
-  scene a real Point Blank match.
+  and lists missing map/weapon files. Its separate **GLB map walk** button
+  works when a selected map has valid visual, collision and spawn files,
+  even if Cross weapon metadata is missing. The full Webport game button
+  stays disabled until its required core files are present. Neither is
+  represented as the official Point Blank game.
 - `/game/?play&map=<map-id>&bots=4`: upstream's actual offline bot game
   built from LeandroDettmer/point-blank-webport.
 - An **experimental** Safari touch controller is included; gameplay on
