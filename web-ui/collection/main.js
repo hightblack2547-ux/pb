@@ -120,13 +120,12 @@ $("preview-map").addEventListener("click",()=>{
  void showGLB("map-preview","/assets/maps/"+m.id+"/visual.glb");
 });
 $("play-map").addEventListener("click",()=>{
- const m=state.selectedMap;if(!m||!/^[a-z\d_-]+$/i.test(m.id))return;
- const params=new URLSearchParams({map:m.id,bots:"4"});
- params.set("play","");
- const c=read("character",null);
- if(c&&typeof c.name==="string"&&/^[a-z\d_-]+$/i.test(c.name))
-   params.set(c.team==="blue"?"charBlue":"charRed",c.name);
- location.href="/game/?"+params.toString();
+ const m=state.selectedMap;
+ if(!m||!/^[a-z\d_-]+$/i.test(m.id))return;
+ // This lightweight walking/shooting test loads the user's real BurningHall
+ // visual/collision GLBs. It is NOT the upstream Cross match engine.
+ if(m.id==="burninghall")location.href="/map3d/";
+ else location.href="/play/"; // real Webport needs complete authorized Cross assets
 });
 function renderRank(){
  $("rank").value=String(Math.max(1,Number(profile.rank)||1));$("nickname").value=profile.nickname||"SOLDIER";
