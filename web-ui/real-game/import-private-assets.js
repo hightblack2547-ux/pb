@@ -12,13 +12,16 @@ const MIME={json:"application/json",glb:"model/gltf-binary",png:"image/png",jpg:
 function installUI(){
   const box=document.createElement("section");box.className="panel";box.innerHTML=
     '<strong>นำเข้า Assets ส่วนตัวจาก iPhone (ZIP)</strong>'+
-    '<p>เลือก ZIP ที่ Export จาก <b>Point Blank Cross</b> โดยมีโฟลเดอร์ <code>assets/</code> หรือ <code>public/assets/</code> อยู่ภายใน ไฟล์จะเก็บไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ถูกอัปโหลดขึ้น GitHub/Netlify</p>'+
+    '<p>เลือก ZIP ที่แปลงเป็นไฟล์ Web GLB/JSON แล้ว (จาก Cross หรือ Portable ที่แปลงสำเร็จ) โดยมี <code>assets/</code> อยู่ภายใน เก็บไว้ใน Safari เครื่องนี้เท่านั้น ไม่อัปโหลดไป GitHub/Netlify</p>'+
     '<input id="asset-file" aria-label="เลือก ZIP Assets" type="file" accept=".zip,application/zip" style="width:100%;padding:13px 2px">'+
     '<p id="import-info" role="status" aria-live="polite">รองรับ ZIP แบบไม่เข้ารหัส ที่ใช้ Store/Deflate เท่านั้น ขนาดนำเข้าสูงสุดราว 900 MB ต่อครั้ง ขึ้นกับพื้นที่ว่างของ iPhone</p>'+
     '<button type="button" id="clear-private" style="margin-top:5px">ล้าง Assets ที่นำเข้าจากเครื่องนี้</button>'+
     '<p class="warn">ไฟล์ Portable .RAR หรือ .i3Pack ยังนำเข้าเป็น Cross Assets โดยตรงไม่ได้ ต้องแปลงเป็นไฟล์ GLB/JSON/Texture ที่ Webport รองรับก่อน และ ZIP ที่นำเข้าเพียงบางส่วนอาจยังเล่นไม่ได้</p>';
+  const zone=document.getElementById("private-import-zone");
   const sections=document.querySelectorAll("section.panel");
-  if(sections.length)sections[0].after(box);else document.querySelector("main")?.append(box);
+  if(zone)zone.replaceWith(box);
+  else if(sections.length)sections[0].after(box);
+  else document.querySelector("main")?.append(box);
   $("asset-file").addEventListener("change",event=>{
     const file=event.target.files?.[0];if(file)void installZip(file);
   });
