@@ -1,6 +1,11 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 const $=id=>document.getElementById(id);
+// A selected, authorized exported map; synthetic training is opt-in only.
+const mapQuery=new URLSearchParams(location.search);
+const requested=mapQuery.get("map")||"burninghall";
+const mapId=/^[a-z0-9_-]{1,80}$/i.test(requested)?requested:"burninghall";
+const demoMode=mapQuery.get("demo")==="1";
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;document.body.insertBefore(renderer.domElement,document.body.firstChild);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x6d879d);scene.fog=new THREE.Fog(0x6d879d,25,100);
 const camera=new THREE.PerspectiveCamera(74,innerWidth/innerHeight,.05,250);const clock=new THREE.Clock();
@@ -23,4 +28,65 @@ move.addEventListener("pointerdown",e=>{joyID=e.pointerId;move.setPointerCapture
 look.addEventListener("pointerdown",e=>{lookID=e.pointerId;oldX=e.clientX;oldY=e.clientY;look.setPointerCapture(lookID)});look.addEventListener("pointermove",e=>{if(e.pointerId===lookID){yaw-=(e.clientX-oldX)*.005;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-oldY)*.005,-1.35,1.35);oldX=e.clientX;oldY=e.clientY}});look.addEventListener("pointerup",()=>lookID=null);look.addEventListener("pointercancel",()=>lookID=null);
 function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05);if(started){const f=(key.has("KeyW")?1:0)-(key.has("KeyS")?1:0)-joy.y,r=(key.has("KeyD")?1:0)-(key.has("KeyA")?1:0)+joy.x,l=Math.max(1,Math.hypot(f,r)),speed=(key.has("ShiftLeft")?4.5:2.8)*dt/l;shift((-Math.sin(yaw)*f+Math.cos(yaw)*r)*speed,(-Math.cos(yaw)*f-Math.sin(yaw)*r)*speed);if(key.has("Space"))shoot();camera.position.copy(player);camera.rotation.order="YXZ";camera.rotation.set(pitch,yaw,0)}renderer.render(scene,camera)}
 window.addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});loop();
-async function init(){const paths=["/assets/maps/burninghall/visual.glb","/assets/maps/burninghall/collision.glb","/assets/maps/burninghall/collision.json"];let ok=await Promise.all(paths.map(valid));if(ok.every(Boolean)){try{const [map,col,raw]=await Promise.all([load(paths[0]),load(paths[1]),fetch(paths[2]).then(r=>r.json())]);visual=map.scene;collision=col.scene;scene.add(visual);collision.updateMatrixWorld(true);collision.traverse(obj=>{if(obj.isMesh){obj.updateMatrixWorld();collisionMeshes.push(obj)}});const s=raw.respawns?.find(r=>Array.isArray(r.pos)&&r.pos.length===3)?.pos || (Array.isArray(raw.spawnSuggestion)?raw.spawnSuggestion:null);if(Array.isArray(s)&&s.length>=3){player.set(s[0],s[1]+(raw.respawns?.length?1.6:.7),s[2])}else{const bb=new THREE.Box3().setFromObject(collision);bb.getCenter(player);player.y+=1.7;}usingReal=true;$("headline").textContent="Burning Hall GLB โหลดแล้ว";$("description").textContent="กำลังใช้ไฟล์ visual.glb และ collision.glb จากเกมจริง โปรดตรวจสอบทิศทาง/หน่วย/Spawn";$("map-label").textContent="BURNING HALL · GLB"}catch(e){usingReal=false;$("description").textContent="ไฟล์แผนที่เสียหรือรูปแบบไม่ตรง: "+String(e.message).slice(0,140)+" · ใช้ฉากจำลองแทน"}}if(!usingReal){if(visual){scene.remove(visual);visual=null;}if(collision){scene.remove(collision);collision=null;}collisionMeshes=[];procedural();$("headline").textContent="3D TRAINING MAP";$("description").textContent="ยังไม่มี Burning Hall GLB ที่ติดตั้งครบหรือโหลดได้: ใช้ฉากฝึก 3D จำลอง ไม่ใช่แผนที่ต้นฉบับ";$("map-label").textContent="SYNTHETIC 3D TRAINING"}$("begin").addEventListener("click",()=>{started=true;$("panel").classList.add("off");if(matchMedia("(pointer:fine)").matches)renderer.domElement.requestPointerLock?.().catch(()=>{})})}init();
+async function init(){
+ const begin=$("begin");
+ begin.disabled=true;
+ $("map-label").textContent=mapId.toUpperCase()+" · CHECKING ASSETS";
+ const base="/assets/maps/"+mapId+"/";
+ const paths=["visual.glb","collision.glb","collision.json"].map(name=>base+name);
+ const ok=await Promise.all(paths.map(valid));
+ if(ok.every(Boolean)){
+   try{
+     const [map,col,raw]=await Promise.all([
+       load(paths[0]),load(paths[1]),fetch(paths[2],{cache:"no-cache"}).then(r=>{if(!r.ok)throw Error("collision.json HTTP "+r.status);return r.json()})
+     ]);
+     visual=map.scene;collision=col.scene;
+     scene.add(visual);
+     collision.updateMatrixWorld(true);
+     collision.traverse(obj=>{if(obj.isMesh){obj.updateMatrixWorld(true);collisionMeshes.push(obj)}});
+     if(!collisionMeshes.length)throw Error("Collision GLB ไม่มีผิวชนที่อ่านได้");
+     const spawn=raw.respawns?.find(r=>Array.isArray(r.pos)&&r.pos.length>=3)?.pos
+       || (Array.isArray(raw.spawnSuggestion)?raw.spawnSuggestion:null);
+     if(Array.isArray(spawn)&&spawn.length>=3&&spawn.slice(0,3).every(Number.isFinite)){
+       player.set(spawn[0],spawn[1]+(raw.respawns?.length?1.6:.7),spawn[2]);
+     }else{
+       const bounds=new THREE.Box3().setFromObject(collision);
+       bounds.getCenter(player);player.y+=1.7;
+     }
+     usingReal=true;
+     $("headline").textContent="โหลดแผนที่ GLB แล้ว: "+mapId;
+     $("description").textContent="ใช้ visual.glb / collision.glb ที่นำเข้าจริงใน Safari เครื่องนี้ โหมดนี้เป็นเพียงการเดินสำรวจเพื่อทดสอบ ไม่ใช่เกม Point Blank เต็มรูปแบบ";
+     $("map-label").textContent=mapId.toUpperCase()+" · IMPORTED GLB";
+     begin.textContent="เริ่มเดินสำรวจแผนที่";
+     begin.disabled=false;
+   }catch(e){
+     $("description").textContent="พบไฟล์แต่เปิด GLB/Collision ไม่สำเร็จ: "+String(e?.message||e).slice(0,170);
+   }
+ }else{
+   const missing=paths.filter((_,i)=>!ok[i]).map(p=>p.split("/").pop());
+   $("headline").textContent="ยังขาดแผนที่ GLB ที่ใช้งานได้";
+   $("description").textContent="แผนที่ "+mapId+" ขาด: "+missing.join(", ")+" · กลับไปหน้า /play/ แล้วนำเข้า ZIP Assets ที่แปลงเป็น Web GLB/JSON";
+ }
+ if(!usingReal){
+   if(visual){scene.remove(visual);visual=null}
+   if(collision){scene.remove(collision);collision=null}
+   collisionMeshes=[];
+   if(demoMode){
+     procedural();
+     $("headline").textContent="ฉากฝึกจำลอง (ไม่ใช่ Point Blank)";
+     $("map-label").textContent="SYNTHETIC DEMO";
+     begin.textContent="เริ่มฉากจำลอง";
+     begin.disabled=false;
+   }else{
+     $("map-label").textContent="ASSETS MISSING · "+mapId.toUpperCase();
+     begin.textContent="ยังเริ่มไม่ได้ — ไม่มีแผนที่ที่เปิดได้";
+     begin.disabled=true;
+   }
+ }
+ begin.addEventListener("click",()=>{
+   if(begin.disabled)return;
+   started=true;$("panel").classList.add("off");
+   if(matchMedia("(pointer:fine)").matches)renderer.domElement.requestPointerLock?.().catch(()=>{});
+ });
+}
+init();
