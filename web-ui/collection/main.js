@@ -124,8 +124,7 @@ $("play-map").addEventListener("click",()=>{
  if(!m||!/^[a-z\d_-]+$/i.test(m.id))return;
  // This lightweight walking/shooting test loads the user's real BurningHall
  // visual/collision GLBs. It is NOT the upstream Cross match engine.
- if(m.id==="burninghall")location.href="/map3d/";
- else location.href="/play/"; // real Webport needs complete authorized Cross assets
+ location.href="/map3d/?map="+encodeURIComponent(m.id); // GLB map walk only, no synthetic fallback
 });
 function renderRank(){
  $("rank").value=String(Math.max(1,Number(profile.rank)||1));$("nickname").value=profile.nickname||"SOLDIER";
