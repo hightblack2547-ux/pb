@@ -1,9 +1,5 @@
 name: Encrypted personal Point Blank asset conversion
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/pb-private-asset-export.yml
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,7 +35,7 @@ jobs:
           set -euo pipefail
           mkdir -p encrypted
           openssl rand -hex 32 > session.password
-          openssl pkeyutl -encrypt -pubin -inkey .github/pb-private-export-recipient.pem -in session.password -out encrypted/key.rsa-oaep
+          openssl pkeyutl -encrypt -pubin -inkey .github/pb-private-export-recipient.pem -in session.password -out encrypted/key.rsa-oaep -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in private_pb_bundle.zip -out encrypted/assets.zip.enc -pass file:session.password
           echo 'Owner-only asset export. The ZIP is AES-256 encrypted. RSA-OAEP key envelope is in key.rsa-oaep.' > encrypted/README.txt
           test -s encrypted/key.rsa-oaep
