@@ -1,5 +1,9 @@
 name: Encrypted personal Point Blank asset conversion
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/pb-private-asset-export.yml
   workflow_dispatch:
 permissions:
   contents: read
