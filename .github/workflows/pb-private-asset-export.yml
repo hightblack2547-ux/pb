@@ -1,0 +1,50 @@
+name: Encrypted personal Point Blank asset conversion
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pb-owner-private-export
+  cancel-in-progress: false
+jobs:
+  encrypted_personal_assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PB_DRIVE_FILE_ID: 10FHoZ5KxaNWpfa_-1maVg9BASnUmjHDF
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install asset inspection dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y p7zip-full
+          python -m pip install --upgrade gdown
+      - name: Convert owner-provided Portable assets in temporary runner
+        run: python scripts/check_pb_rar.py
+      - name: Package selected converted assets without publishing originals
+        run: python scripts/package-private-portable.py
+      - name: Encrypt for user's private recipient key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p encrypted
+          openssl rand -hex 32 > session.password
+          openssl pkeyutl -encrypt -pubin -inkey .github/pb-private-export-recipient.pem -in session.password -out encrypted/key.rsa-oaep
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in private_pb_bundle.zip -out encrypted/assets.zip.enc -pass file:session.password
+          echo 'Owner-only asset export. The ZIP is AES-256 encrypted. RSA-OAEP key envelope is in key.rsa-oaep.' > encrypted/README.txt
+          test -s encrypted/key.rsa-oaep
+          test -s encrypted/assets.zip.enc
+          echo "Personal export encrypted. No raw game assets in the downloadable artifact."
+      - name: Upload encrypted bundle ONLY
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb-personal-converted-assets-encrypted
+          path: encrypted/
+          retention-days: 1
+          if-no-files-found: error
