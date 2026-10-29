@@ -37,6 +37,8 @@ cp web-ui/map3d/src/main.js webport/map3d/src/
 # The launcher sends players to the actual upstream client, not our synthetic raycast demo.
 node --check web-ui/real-game/pb-touch.js
 node --check web-ui/real-game/import-private-assets.js
+node --check web-ui/map3d/src/main.js
+node --check web-ui/collection/main.js
 node --check web-ui/real-game/private-assets-sw.js
 node --check scripts/patch-mobile-input.mjs
 node --check scripts/patch-offline-loadout.mjs
@@ -59,6 +61,7 @@ test -s webport/dist/collection/title-catalog.json
 test -n "$(find webport/dist/collection -type f -name '*.js' -print -quit)"
 test -s webport/dist/game/index.html
 test -s webport/dist/play/index.html
+grep -q 'id="walk"' webport/dist/play/index.html
 test -s webport/dist/pb-touch.js
 test -s webport/dist/import-private-assets.js
 test -s webport/dist/pb-private-sw.js
